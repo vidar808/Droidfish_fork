@@ -2861,7 +2861,15 @@ public class DroidFish extends AppCompatActivity
         return "stockfish".equals(name) ||
                "rodent4".equals(name) ||
                "patricia".equals(name) ||
-               name.endsWith(".ini");
+               name.endsWith(".ini") ||
+               name.endsWith(".json") ||
+               name.endsWith(".pb.gz") ||
+               name.endsWith(".bin") ||
+               name.endsWith(".dat") ||
+               name.endsWith(".log") ||
+               name.endsWith(".txt") ||
+               name.endsWith(".md") ||
+               name.endsWith(".nnue");
     }
 
     private Dialog selectEngineDialog(final boolean abortOnCancel) {
@@ -2897,6 +2905,12 @@ public class DroidFish extends AppCompatActivity
             for (String file : fileNames) {
                 ids.add(base + file);
                 items.add(file);
+            }
+
+            List<FileUtil.EngineEntry> subEngines = FileUtil.findEnginesInSubdirectories(engineDir);
+            for (FileUtil.EngineEntry entry : subEngines) {
+                ids.add(entry.path);
+                items.add(entry.displayName);
             }
         }
 

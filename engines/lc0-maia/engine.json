@@ -1,0 +1,75 @@
+{
+  "id": "lc0",
+  "binary": "lc0",
+  "display_name": "Lc0 (Maia)",
+  "uci_options": {
+    "Threads": "1",
+    "MinibatchSize": "1",
+    "MaxPrefetch": "0",
+    "SmartPruningFactor": "0",
+    "Backend": "eigen"
+  },
+  "hidden_options": [
+    "WeightsFile",
+    "Backend",
+    "MinibatchSize",
+    "MaxPrefetch",
+    "SmartPruningFactor"
+  ],
+  "variants": [
+    {
+      "id": "maia-1100",
+      "display_name": "Maia 1100",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1100.pb.gz" }
+    },
+    {
+      "id": "maia-1200",
+      "display_name": "Maia 1200",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1200.pb.gz" }
+    },
+    {
+      "id": "maia-1300",
+      "display_name": "Maia 1300",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1300.pb.gz" }
+    },
+    {
+      "id": "maia-1400",
+      "display_name": "Maia 1400",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1400.pb.gz" }
+    },
+    {
+      "id": "maia-1500",
+      "display_name": "Maia 1500",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1500.pb.gz" }
+    },
+    {
+      "id": "maia-1600",
+      "display_name": "Maia 1600",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1600.pb.gz" }
+    },
+    {
+      "id": "maia-1700",
+      "display_name": "Maia 1700",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1700.pb.gz" }
+    },
+    {
+      "id": "maia-1800",
+      "display_name": "Maia 1800",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1800.pb.gz" }
+    },
+    {
+      "id": "maia-1900",
+      "display_name": "Maia 1900",
+      "go_override": "go nodes 1",
+      "uci_options": { "WeightsFile": "{engine_dir}/maia-1900.pb.gz" }
+    }
+  ]
+}

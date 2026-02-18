@@ -52,6 +52,8 @@ public abstract class UCIEngineBase implements UCIEngine {
             return new OpenExchangeEngine(engine, engineOptions.workDir, report);
         else if (EngineUtil.isNetEngine(engine))
             return new NetworkEngine(engine, engineOptions, report);
+        else if (EngineManifest.hasManifest(engine))
+            return new ConfiguredEngine(engine, engineOptions.workDir, report);
         else
             return new ExternalEngine(engine, engineOptions.workDir, report);
     }
