@@ -1,4 +1,4 @@
-# DroidFish Enhanced Fork
+# DroidFish Enhanced
 
 A feature-rich Android chess GUI forked from [peterosterlund2/droidfish](https://github.com/peterosterlund2/droidfish), with a completely revised engine system, secure network engine support, and new analysis features.
 
