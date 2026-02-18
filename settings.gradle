@@ -1,1 +1,1 @@
-include ':DroidFishApp', ':EngineServer'
+include ':DroidFishApp'

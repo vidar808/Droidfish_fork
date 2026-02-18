@@ -13,7 +13,7 @@
 7. **Multi-PV analysis** - Shows multiple principal variations simultaneously
 8. **Open source (GPL-3.0)** - Fully inspectable and modifiable
 9. **Gradle multi-module** - Clean separation of concerns across modules
-10. **Built-in EngineServer** - Desktop companion app for hosting engines
+10. **Chess-UCI-Server** - Python network engine server (replaced built-in EngineServer)
 
 ### Weaknesses
 
@@ -24,8 +24,8 @@
 5. **Hardcoded timeouts** - Startup timeout (10s) and connect timeout (15s) are constants; not yet user-configurable
 6. **Limited network error handling** - Errors report to user; position tracking added for future recovery
 7. **~~Config via flat files~~** - Extended to 14-line NETE format (name, host, port, tls, token, fingerprint, auth_method, psk, relay, external_host, mdns_name, selected_engine) with UI support
-8. **EngineServer is minimal** - The built-in Java server has no security, logging, or connection management
-9. **Single client per engine** - EngineServer can only serve one client at a time per engine
+8. **~~EngineServer is minimal~~** - Removed; replaced by Chess-UCI-Server with TLS, auth, session management
+9. **~~Single client per engine~~** - Chess-UCI-Server supports session management and connection queuing
 10. **~~No engine discovery~~** - mDNS auto-discovery via NsdManager + QR code scanning via ZXing added
 11. **~~Outdated Gradle plugin~~** - Updated to AGP 8.2.0 / Gradle 8.4
 12. **Limited testing** - Unit tests added for LocalPipe, UCIOptions, UCIEngineBase; instrumentation tests still minimal

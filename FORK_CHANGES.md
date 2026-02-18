@@ -111,8 +111,8 @@ Major extension of the upstream network engine:
 
 ## Documentation
 
-- **`doc/droidfish_manual.md`**: Full markdown manual (converted from PDF, updated for fork)
-- **`doc/droidfish_manual.pdf`**: Regenerated 15-page PDF from markdown
+- **`docs/droidfish_manual.md`**: Full markdown manual (converted from PDF, updated for fork)
+- **`docs/droidfish_manual.pdf`**: Regenerated 15-page PDF from markdown
 
 ## What's Unchanged
 
@@ -124,5 +124,5 @@ Major extension of the upstream network engine:
 - Board editor
 - ECO classification
 - Localization (15+ languages, original strings preserved)
-- EngineServer module (built-in Java server)
+- ~~EngineServer module~~ (removed — replaced by chess-uci-server)
 - GPL-3.0 license
