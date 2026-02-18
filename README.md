@@ -16,9 +16,9 @@ The world's strongest open-source chess engine, now updated to version 18 with s
 
 A personality-driven engine with **15+ built-in playing styles** — including aggressive (Tal, Spitfire), positional (Nimzowitsch, Petrosian-style Strangler), romantic (Morphy), and defensive profiles. Each personality changes how the engine values material, king safety, pawn structure, and piece activity, producing genuinely different games rather than just weaker play. Rodent IV also supports custom personality files, opening books, and a guide book for tuned opening play. It can be configured extremely weak, making it the ideal training partner for beginners.
 
-#### Patricia (new)
+#### [Patricia](https://github.com/Adam-Kulju/Patricia) (new)
 
-A modern C++20 engine with **dual NNUE neural networks** (separate nets for different game phases) and integrated **Fathom Syzygy tablebase probing** for perfect endgame play. Patricia brings a distinctly different evaluation style from Stockfish — useful for getting a second opinion on complex positions or running engine-vs-engine analysis to test the robustness of a line.
+Known as **the most aggressive chess engine**, Patricia was chosen for its uniquely entertaining and sharp play style. It actively seeks complications, sacrifices material for initiative, and creates tactical chaos — producing games that are far more exciting to watch and study than typical engine play. Under the hood it's a modern C++20 engine with **dual NNUE neural networks** and integrated **Fathom Syzygy tablebase probing** for perfect endgame play. Patricia provides an excellent contrast to Stockfish's precise, positional style — use it when you want a second opinion that favors aggression, or for engine-vs-engine matches that are actually fun to follow.
 
 CuckooChess has been removed.
 
