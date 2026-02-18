@@ -1,20 +1,63 @@
-# Introduction
+# DroidFish Enhanced Fork
 
-*DroidFish* is a feature-rich graphical chess user interface, combined with
-the very strong *Stockfish* chess engine.
+A feature-rich Android chess GUI forked from [peterosterlund2/droidfish](https://github.com/peterosterlund2/droidfish), with a completely revised engine system, secure network engine support, and new analysis features.
 
-*DroidFish* is primarily designed for engine analysis of chess positions and
-viewing and editing of chess games. It can also be used for playing games, either
-against a chess engine or against another human player. Both players must play
-on the same device though.
+## What's New in This Fork
 
-Two additional engines are bundled: *Rodent IV*, a configurable personality
-engine that can play at a wide range of strength levels (including very weak
-settings suitable for beginners), and *Patricia*, a strong modern engine.
+### Three Bundled Engines
 
-This is a fork of [peterosterlund2/droidfish](https://github.com/peterosterlund2/droidfish)
-with enhanced networking, additional engines, and new features.
-See [FORK_CHANGES.md](FORK_CHANGES.md) for a complete list of modifications.
+The original DroidFish shipped Stockfish and the weak Java-based CuckooChess engine. This fork replaces that with three compiled native engines:
+
+| Engine | Strength | What It Does |
+|--------|----------|-------------|
+| **Stockfish 18** | ~3190 Elo | Strongest open-source engine. Updated from upstream's v16.1 with ARM NEON dotprod support for faster analysis on modern phones. UCI_Elo range: 1320–3190. |
+| **Rodent IV** | Configurable | Personality engine with 15+ presets (Tal, Morphy, Nimzowitsch, etc.). Each personality plays a different style. Can be set very weak for beginners. |
+| **Patricia** | ~3000+ Elo | Modern C++20 engine with NNUE evaluation and Fathom tablebase support. Strong alternative to Stockfish. |
+
+CuckooChess has been removed. All three engines are compiled via NDK as native `.so` libraries.
+
+### Secure Network Engine System
+
+The upstream DroidFish had a basic Java EngineServer (no encryption, no auth, no discovery). This fork replaces it entirely with **Chess-UCI-Server**, a Python asyncio server bundled in `chess-uci-server/`:
+
+**Server features:**
+- **Single-port multiplexing** — all engines on one port (no multi-port config)
+- **TLS encryption** — optional SSL/TLS for all traffic
+- **Authentication** — token-based and pre-shared key (PSK) methods
+- **Session management** — engine stays warm after disconnect for fast reconnect
+- **Output throttling** — rate-limits UCI info lines to save mobile bandwidth
+- **Auto-discovery** — mDNS advertisement (`_chess-uci._tcp`) on the local network
+- **QR code pairing** — scan to connect instantly from DroidFish
+- **Relay server** — NAT traversal without port forwarding
+- **UPnP** — automatic router port mapping
+- **228 pytest tests**
+
+**Client-side (DroidFish) networking:**
+- **Smart connection** — tries mDNS (1.5s) → LAN (2s) → UPnP (5s) → relay (10s) → retry
+- **Reconnection** — exponential backoff, up to 5 attempts
+- **Engine selection** — `ENGINE_LIST` / `SELECT_ENGINE` protocol for single-port servers
+- **QR scanning** — ZXing-based scanner in the network engine config screen
+- **mDNS discovery** — "Find Servers" button discovers servers on the local network
+- **Connection file import** — `.chessuci` files for zero-config setup
+
+### New Features
+
+- **Quick Play** — one-tap game setup dialog with ELO slider (1320–3190), time control presets, and color selection
+- **Lichess Opening Explorer** — dedicated activity with Lichess API integration, move statistics (win/draw/loss bars), and response caching
+- **GameViewModel** — game state persists across screen rotation and configuration changes
+- **SAF file access** — PGN files work with Android 11+ `content://` URIs via Storage Access Framework
+
+### Build Modernization
+
+- Gradle 8.4 / AGP 8.2.0, compileSdk 34, targetSdk 34
+- NDK 25 with ARM NEON dotprod for Stockfish
+- App ID: `org.petero.droidfish.custom`
+
+See [FORK_CHANGES.md](FORK_CHANGES.md) for the complete list of modifications.
+
+---
+
+# DroidFish User Manual
 
 
 # Using the user interface
