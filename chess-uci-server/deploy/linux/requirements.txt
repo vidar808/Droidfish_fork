@@ -1,0 +1,3 @@
+qrcode>=7.0
+zeroconf>=0.80.0
+miniupnpc>=2.2.0

@@ -1,0 +1,14 @@
+[Unit]
+Description=Chess UCI Relay Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/chess-relay/relay_server.py --port 19000
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

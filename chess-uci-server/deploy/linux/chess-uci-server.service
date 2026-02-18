@@ -1,0 +1,18 @@
+[Unit]
+Description=Chess UCI Server
+After=network.target
+
+[Service]
+Type=simple
+User=chess
+# Update this path to your deploy/linux directory
+WorkingDirectory=/opt/chess-uci-server
+ExecStart=/usr/bin/python3 /opt/chess-uci-server/chess.py
+ExecStop=/usr/bin/python3 /opt/chess-uci-server/chess.py --stop
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

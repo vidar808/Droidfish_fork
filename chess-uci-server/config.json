@@ -1,0 +1,37 @@
+{
+  "host": "0.0.0.0",
+  "base_log_dir": "",
+  "display_uci_communication": true,
+  "enable_trusted_sources": true,
+  "enable_auto_trust": true,
+  "enable_server_log": true,
+  "enable_uci_log": false,
+  "detailed_log_verbosity": true,
+  "enable_firewall_rules": false,
+  "enable_firewall_subnet_blocking": false,
+  "enable_firewall_ip_blocking": false,
+  "max_connection_attempts": 2,
+  "connection_attempt_period": 3600,
+  "enable_subnet_connection_attempt_blocking": true,
+  "max_connection_attempts_from_untrusted_subnet": 2,
+  "Log_untrusted_connection_attempts": true,
+  "inactivity_timeout": 900,
+  "heartbeat_time": 300,
+  "watchdog_timer_interval": 300,
+  "custom_variables": {
+  },
+  "max_connections": 10,
+  "trusted_sources": [
+    "127.0.0.1",
+    "50.113.6.153"
+  ],
+  "trusted_subnets": [
+    "172.56.44.0/24"
+  ],
+  "engines": {
+    "Stockfish": {
+      "path": "C:\\Users\\administrator\\Desktop\\chess\\stockfish 16\\stockfish-windows-x86-64-avx2.exe",
+      "port": 9998
+    }
+  }
+}

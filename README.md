@@ -8,12 +8,13 @@ viewing and editing of chess games. It can also be used for playing games, eithe
 against a chess engine or against another human player. Both players must play
 on the same device though.
 
-A much weaker chess engine called *CuckooChess* is also included in
-*DroidFish*. Its primary feature is that it can be made to play very weakly so
-that even beginners have a reasonable chance to beat it.
+Two additional engines are bundled: *Rodent IV*, a configurable personality
+engine that can play at a wide range of strength levels (including very weak
+settings suitable for beginners), and *Patricia*, a strong modern engine.
 
-<a href="https://f-droid.org/repository/browse/?fdid=org.petero.droidfish" target="_blank">
-<img src="https://f-droid.org/badge/get-it-on.png" alt="Get it on F-Droid" height="80"/></a>
+This is a fork of [peterosterlund2/droidfish](https://github.com/peterosterlund2/droidfish)
+with enhanced networking, additional engines, and new features.
+See [FORK_CHANGES.md](FORK_CHANGES.md) for a complete list of modifications.
 
 
 # Using the user interface
@@ -126,14 +127,12 @@ game mode that was used before analysis mode was enabled is restored.
 For engines that can reduce their playing strength using the UCI_LimitStrength
 and UCI_Elo options, it is possible to specify the engine playing strength by
 opening the *Left drawer menu* and selecting *Set Engine Strength*. Both
-built-in engines (*Stockfish* and *CuckooChess*) can reduce their playing
-strength.
+*Stockfish* and *Rodent IV* can reduce their playing strength.
 
 The available Elo range can be different for different engines. If *Stockfish*
-is playing too strong even on the lowest setting, consider switching to the
-*CuckooChess* engine which is able to play at a much weaker level. At the lowest
-setting, *CuckooChess* plays random legal moves so it should be usable also for
-an absolute beginner.
+is playing too strong even on the lowest setting (Elo 1320), consider switching
+to *Rodent IV* which offers configurable personalities and can play at much
+weaker levels suitable for beginners.
 
 The selected playing strength is shown in the title bar after the engine name.
 
@@ -631,31 +630,24 @@ settings, open the UCI options editor and click `RESET` and `OK`.
 
 ## Using a remote engine server
 
-*DroidFish* can use UCI engines that run on a remote server computer.
+*DroidFish* can use UCI engines that run on a remote server computer via the
+bundled [Chess-UCI-Server](chess-uci-server/README.md).
 
-* Install chess network server software on the remote computer.
+* Install and start Chess-UCI-Server on the remote computer (see
+  [Quick Deploy](chess-uci-server/README.md#quick-deploy)).
 
-  * For Windows and Linux, install the Engine server software from the
-    [DroidFish](http://hem.bredband.net/petero2b/droidfish/index.html) page.
+* The easiest way to connect is to scan the QR code displayed by
+  `python3 chess.py --pair` using *Manage Chess Engines* -> *Scan QR*.
 
-  * Alternatively for Linux, `mini-inetd` from the `tcputils` package can be
-    used.
+* Alternatively, use mDNS auto-discovery (*Find Servers* button), import a
+  `.chessuci` connection file, or manually enter the host and port.
 
-* Select *Manage Chess Engines* in the *Left drawer menu*, create a new network
-  engine and enter the host name (or IP address) and port number for the remote
-  engine.
+The connection supports optional **TLS encryption** and **token/PSK
+authentication** for secure remote access. The server also supports **relay
+mode** for NAT traversal without port forwarding.
 
-* Go to *Left drawer menu* -> *Manage Chess Engines* -> *Select Chess Engine*
-  and select the engine to use.
-
-**Note!** The remote server protocol simply sends UCI protocol commands over a
-TCP connection using plain text. There is no security or authentication built
-into the protocol. Therefore a remote server should only be used in a trusted
-private network.
-
-**Note!** It is possible to access a private network over the internet by
-running VPN server software in the private network. How to set up a VPN server
-is beyond the scope of this document.
+See [docs/integration-guide.md](docs/integration-guide.md) for detailed setup
+instructions.
 
 
 # Endgame tablebases
