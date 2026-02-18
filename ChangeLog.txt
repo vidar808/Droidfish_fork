@@ -1,3 +1,27 @@
+2026-02-17: Version 1.90-custom (Enhanced Fork)
+- Update Stockfish to version 18 with ARM NEON dotprod instructions.
+- Add Rodent IV engine (15+ configurable personalities, adjustable strength).
+- Add Patricia engine (C++20, dual NNUE networks, Fathom tablebase probing).
+- Remove CuckooChess engine.
+- Remove EngineServer module (replaced by Chess-UCI-Server).
+- Add Chess-UCI-Server: Python network engine server with TLS, authentication,
+  session management, output throttling, mDNS, QR pairing, UPnP, and relay.
+- NetworkEngine: TLS encryption, token/PSK authentication, reconnection with
+  exponential backoff, single-port engine selection, relay server support.
+- Smart connection strategy: mDNS -> LAN -> UPnP -> relay -> retry.
+- QR code scanning for instant server pairing (ZXing).
+- mDNS auto-discovery of servers on the local network (NsdManager).
+- Connection file import (.chessuci) for zero-config setup.
+- Quick Play dialog: one-tap game setup with ELO, time control, color.
+- Lichess Opening Explorer: dedicated activity with API, cache, WDL bars.
+- GameViewModel for game state persistence across configuration changes.
+- SAF migration for PGN file access (Android 11+ content:// URI support).
+- MANAGE_EXTERNAL_STORAGE permission for Android 11+.
+- Build: Gradle 8.4 / AGP 8.2.0, compileSdk 34, targetSdk 34, NDK 25.
+- 14-line NETE config format (was 5-line).
+- Updated user manual (markdown + PDF).
+- FORK_CHANGES.md documenting all modifications from upstream.
+
 2024-02-25: Version 1.90
 - Update to Stockfish 16.1.
 
