@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 
 import com.kalab.chess.enginesupport.ChessEngine;
 
+import android.content.Context;
 import android.os.Build;
 
 public class EngineUtil {
@@ -33,15 +34,34 @@ public class EngineUtil {
         System.loadLibrary("nativeutil");
     }
 
-    /** Return file name of the internal stockfish executable. */
+    /** Return asset path of the internal stockfish executable. */
     public static String internalStockFishName() {
-        String abi = Build.CPU_ABI;
+        String abi = Build.SUPPORTED_ABIS[0];
         if (!"x86".equals(abi) &&
                 !"x86_64".equals(abi) &&
                 !"arm64-v8a".equals(abi)) {
             abi = "armeabi-v7a"; // Unknown ABI, assume 32-bit arm
         }
         return abi + "/stockfish" + (isSimdSupported() ? "" : "_nosimd");
+    }
+
+    /** Return full path to the stockfish executable in nativeLibraryDir.
+     *  On Android 10+, executables must be in nativeLibraryDir to have
+     *  execute permission. */
+    public static String internalStockFishPath(Context context) {
+        String nativeLibDir = context.getApplicationInfo().nativeLibraryDir;
+        String suffix = isSimdSupported() ? "" : "_nosimd";
+        return nativeLibDir + "/libstockfish" + suffix + ".so";
+    }
+
+    /** Return full path to the Rodent IV executable in nativeLibraryDir. */
+    public static String internalRodentPath(Context context) {
+        return context.getApplicationInfo().nativeLibraryDir + "/librodent4.so";
+    }
+
+    /** Return full path to the Patricia executable in nativeLibraryDir. */
+    public static String internalPatriciaPath(Context context) {
+        return context.getApplicationInfo().nativeLibraryDir + "/libpatricia.so";
     }
 
     /** Return true if file "engine" is a network engine. */

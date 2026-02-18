@@ -40,7 +40,7 @@ public class ChessEngineResolver {
     public ChessEngineResolver(Context context) {
         super();
         this.context = context;
-        this.target = Build.CPU_ABI;
+        this.target = Build.SUPPORTED_ABIS[0];
         sanitizeArmV6Target();
     }
 

@@ -30,9 +30,11 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.petero.droidfish.EngineOptions;
-import org.petero.droidfish.engine.cuckoochess.CuckooChessEngine;
+
+import android.util.Log;
 
 public abstract class UCIEngineBase implements UCIEngine {
+    private static final String TAG = "UCIEngineBase";
 
     private boolean processAlive;
     private UCIOptions options;
@@ -40,10 +42,12 @@ public abstract class UCIEngineBase implements UCIEngine {
 
     public static UCIEngine getEngine(String engine,
                                       EngineOptions engineOptions, Report report) {
-        if ("cuckoochess".equals(engine))
-            return new CuckooChessEngine();
-        else if ("stockfish".equals(engine))
+        if ("stockfish".equals(engine))
             return new InternalStockFish(report, engineOptions.workDir);
+        else if ("rodent4".equals(engine))
+            return new InternalRodent(report, engineOptions.workDir);
+        else if ("patricia".equals(engine))
+            return new InternalPatricia(report, engineOptions.workDir);
         else if (EngineUtil.isOpenExchangeEngine(engine))
             return new OpenExchangeEngine(engine, engineOptions.workDir, report);
         else if (EngineUtil.isNetEngine(engine))
@@ -79,7 +83,8 @@ public abstract class UCIEngineBase implements UCIEngine {
         Properties iniOptions = new Properties();
         try (FileInputStream is = new FileInputStream(optionsFile)) {
             iniOptions.load(is);
-        } catch (IOException|IllegalArgumentException ignore) {
+        } catch (IOException|IllegalArgumentException e) {
+            Log.d(TAG, "Failed to load engine options: " + e.getMessage());
         }
         Map<String,String> opts = new TreeMap<>();
         for (Map.Entry<Object,Object> ent : iniOptions.entrySet()) {
@@ -115,7 +120,8 @@ public abstract class UCIEngineBase implements UCIEngine {
         File optionsFile = getOptionsFile();
         try (FileOutputStream os = new FileOutputStream(optionsFile)) {
             iniOptions.store(os, null);
-        } catch (IOException ignore) {
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to save engine options: " + e.getMessage());
         }
     }
 

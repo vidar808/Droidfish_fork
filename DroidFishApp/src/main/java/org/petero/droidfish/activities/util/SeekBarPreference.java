@@ -23,7 +23,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.preference.Preference;
-import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -31,9 +30,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.Toast;
-
-import org.petero.droidfish.DroidFishApp;
 import org.petero.droidfish.R;
 import org.petero.droidfish.databinding.SeekbarPreferenceBinding;
 import org.petero.droidfish.databinding.SelectPercentageBinding;
@@ -45,7 +41,7 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
     private final static int maxValue = 1000;
     private final static int DEFAULT_VALUE = 1000;
     private int currVal = DEFAULT_VALUE;
-    private boolean showStrengthHint = true;
+
 
     private SeekbarPreferenceBinding binding;
 
@@ -141,15 +137,6 @@ public class SeekBarPreference extends Preference implements OnSeekBarChangeList
         SharedPreferences.Editor editor = getEditor();
         editor.putInt(getKey(), progress);
         editor.apply();
-        if ((progress == 0) && showStrengthHint) {
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String engine = settings.getString("engine", "stockfish");
-            if ("stockfish".equals(engine)) {
-                showStrengthHint = false;
-                if (getKey().equals("strength"))
-                    DroidFishApp.toast(R.string.strength_cuckoo_hint, Toast.LENGTH_LONG);
-            }
-        }
     }
 
     @Override

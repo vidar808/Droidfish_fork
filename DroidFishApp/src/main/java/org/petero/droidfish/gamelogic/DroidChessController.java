@@ -38,6 +38,7 @@ import org.petero.droidfish.GameMode;
 import org.petero.droidfish.PGNOptions;
 import org.petero.droidfish.Util;
 import org.petero.droidfish.book.BookOptions;
+import org.petero.droidfish.book.DroidBook;
 import org.petero.droidfish.book.EcoDb;
 import org.petero.droidfish.book.IOpeningBook.BookPosInput;
 import org.petero.droidfish.engine.DroidComputerPlayer;
@@ -103,6 +104,9 @@ public class DroidChessController {
         updateGameMode();
         game.resetModified(pgnOptions);
         autoSaveOldGame(oldGame, game.treeHashSignature);
+        DroidBook.getInstance().setOnExplorerDataReady(() -> {
+            gui.runOnUIThread(() -> { if (game != null) updateBookHints(); });
+        });
     }
 
     /** Save old game if has been modified since start/load of game and is
@@ -718,6 +722,7 @@ public class DroidChessController {
 
         private boolean whiteMove = true;
         private String bookInfo = "";
+        private String explorerInfo = "";
         private ArrayList<Move> bookMoves = null;
         private String eco = ""; // ECO classification
         private int distToEcoTree = 0; // Number of plies since game was in the "ECO tree".
@@ -732,6 +737,7 @@ public class DroidChessController {
             pvInfoV.clear();
             currDepth = 0;
             bookInfo = "";
+            explorerInfo = "";
             bookMoves = null;
             eco = "";
             distToEcoTree = 0;
@@ -804,6 +810,7 @@ public class DroidChessController {
             ti.pvStr = newPV;
             ti.statStr = statStr;
             ti.bookInfo = bookInfo;
+            ti.explorerInfo = explorerInfo;
             ti.eco = eco;
             ti.distToEcoTree = distToEcoTree;
             ti.pvMoves = pvMoves;
@@ -899,8 +906,9 @@ public class DroidChessController {
 
         @Override
         public void notifyBookInfo(int id, String bookInfo, ArrayList<Move> moveList,
-                                   String eco, int distToEcoTree) {
+                                   String eco, int distToEcoTree, String explorerInfo) {
             this.bookInfo = bookInfo;
+            this.explorerInfo = explorerInfo;
             bookMoves = moveList;
             this.eco = eco;
             this.distToEcoTree = distToEcoTree;
@@ -963,7 +971,8 @@ public class DroidChessController {
             Pair<String, ArrayList<Move>> bi = computerPlayer.getBookHints(posInput, localPt());
             EcoDb.Result ecoData = EcoDb.getInstance().getEco(game.tree);
             String eco = ecoData.getName();
-            listener.notifyBookInfo(searchId, bi.first, bi.second, eco, ecoData.distToEcoTree);
+            String explorerHtml = DroidBook.getInstance().getExplorerInfo(game.currPos());
+            listener.notifyBookInfo(searchId, bi.first, bi.second, eco, ecoData.distToEcoTree, explorerHtml);
         }
     }
 
@@ -1005,7 +1014,7 @@ public class DroidChessController {
                 listener.clearSearchInfo(searchId);
                 EcoDb.Result ecoData = EcoDb.getInstance().getEco(game.tree);
                 String eco = ecoData.getName();
-                listener.notifyBookInfo(searchId, "", null, eco, ecoData.distToEcoTree);
+                listener.notifyBookInfo(searchId, "", null, eco, ecoData.distToEcoTree, "");
                 final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
                 Position currPos = new Position(game.currPos());
                 long now = System.currentTimeMillis();

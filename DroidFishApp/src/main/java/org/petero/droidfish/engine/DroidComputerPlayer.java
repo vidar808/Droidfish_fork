@@ -18,6 +18,7 @@
 
 package org.petero.droidfish.engine;
 
+import android.util.Log;
 import android.util.Pair;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.petero.droidfish.tb.Probe;
 
 /** A computer algorithm player. */
 public class DroidComputerPlayer {
+    private static final String TAG = "DroidComputerPlayer";
     private UCIEngine uciEngine = null;
     private final SearchListener listener;
     private final DroidBook book;
@@ -84,9 +86,7 @@ public class DroidComputerPlayer {
         }
 
         final void setState(MainState s) {
-//            System.out.printf("state: %s -> %s\n",
-//                              (state != null) ? state.toString() : "(null)",
-//                              s.toString());
+            Log.d(TAG, "Engine state: " + (state != null ? state : "(null)") + " -> " + s);
             state = s;
         }
     }

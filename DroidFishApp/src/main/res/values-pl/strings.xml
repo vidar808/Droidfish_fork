@@ -218,7 +218,6 @@ Jeśli pracujesz na baterii, zalecana jest zmiana ustawień, w celu oszczędzani
     <string name="slash_not_allowed">Znak / jest niedozwolony</string>
     <string name="engine_error">Błąd silnika</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Wybierz silnik</string>
     <string name="engine_options">Opcje silnika</string>
     <string name="set_engine_options">Ustaw opcje</string>
@@ -237,7 +236,6 @@ Jeśli pracujesz na baterii, zalecana jest zmiana ustawień, w celu oszczędzani
     <string name="network_engine_config_error">Błąd konfiguracji silnika sieciowego</string>
     <string name="invalid_network_port">Niepoprawny port sieciowy</string>
     <string name="start_new_game">Rozpocząć nową partię?</string>
-    <string name="strength_cuckoo_hint">Użyj silnika CockooChess dla jeszcze niższej siły gry.</string>
     <string name="piece_names">P S G W H K</string>
     <string name="highlight_last_move_title">Zaznacz ostatnie posunięcie</string>
     <string name="highlight_last_move_summary">Obrysuj ostatnio przesuniętą bierkę prostokątem</string>
@@ -389,7 +387,7 @@ Jeśli pracujesz na baterii, zalecana jest zmiana ustawień, w celu oszczędzani
     <string name="prefs_bookTournamentMode_summary">Ignoruj ruchy, które nie są oznaczone do grania podczas turnieju</string>
     <string name="prefs_bookRandom_title">Losowość książki</string>
     <string name="prefs_bookFile_title">Nazwa pliku książki</string>
-    <string name="prefs_bookFile_summary">Plik książki otwarć Polyglot lub CTG w katalogu DroidFish na karcie SD</string>
+    <string name="prefs_bookFile_summary">Plik książki otwarć Polyglot, ABK lub CTG w katalogu DroidFish na karcie SD</string>
     <string name="prefs_pgnSettings_title">Ustawienia PGN</string>
     <string name="prefs_pgnSettings_summary">Ustawienia dla importu i eksportu w formacie PGN (portable game notation)</string>
     <string name="prefs_pgn_viewer">Przeglądanie PGN</string>

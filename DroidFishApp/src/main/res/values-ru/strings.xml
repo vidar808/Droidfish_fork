@@ -218,7 +218,6 @@
     <string name="slash_not_allowed">Символ / не допускается</string>
     <string name="engine_error">Ошибка движка</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Выбрать движок</string>
     <string name="engine_options">Параметры движка</string>
     <string name="set_engine_options">Настройка параметров</string>
@@ -237,7 +236,6 @@
     <string name="network_engine_config_error">Ошибка конфигурации сетевого движка</string>
     <string name="invalid_network_port">Недопустимый сетевой порт</string>
     <string name="start_new_game">Начать новую партию?</string>
-    <string name="strength_cuckoo_hint">Использовать движок CuckooChess для наименьшего уровня сложности.</string>
     <string name="piece_names">П К С Л Ф Кр</string>
     <string name="highlight_last_move_title">Подсвечивать последний ход</string>
     <string name="highlight_last_move_summary">Нарисовать прямоугольник вокруг последней передвинутой фигуры</string>
@@ -389,7 +387,7 @@
     <string name="prefs_bookTournamentMode_summary">Игнорировать шаги, отмеченные как не для турнирных партий</string>
     <string name="prefs_bookRandom_title">Рандомизация книги</string>
     <string name="prefs_bookFile_title">Имя файла книги</string>
-    <string name="prefs_bookFile_summary">Polyglot или CTG файл книги в директории DroidFish на SD карте</string>
+    <string name="prefs_bookFile_summary">Polyglot, ABK или CTG файл книги в директории DroidFish на SD карте</string>
     <string name="prefs_pgnSettings_title">Настройки PGN</string>
     <string name="prefs_pgnSettings_summary">Настройки для импорта и экспорта PGN данных</string>
     <string name="prefs_pgn_viewer">Просмотр PGN</string>

@@ -1,14 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    namespace "org.petero.droidfish"
+    compileSdk 34
 
     defaultConfig {
-        applicationId "org.petero.droidfish"
-        minSdkVersion 16
-        targetSdkVersion 28
+        applicationId "org.petero.droidfish.custom"
+        minSdk 21
+        targetSdk 34
         versionCode 100
-        versionName "1.90"
+        versionName "1.90-custom"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             ndkBuild {
@@ -44,7 +45,11 @@ android {
         }
     }
 
-    lintOptions {
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    lint {
         abortOnError false
     }
     compileOptions {
@@ -54,19 +59,24 @@ android {
 
     buildFeatures {
         dataBinding true
+        buildConfig true
     }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
     testImplementation 'junit:junit:4.13'
+    testImplementation 'org.mockito:mockito-core:5.7.0'
+    testImplementation 'org.json:json:20231013'
     androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    implementation project(':CuckooChessEngine')
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
     implementation 'com.caverock:androidsvg-aar:1.4'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 }
 
 // Build the ECO database
@@ -77,20 +87,47 @@ task buildEco {
 }
 preBuild.dependsOn buildEco
 
-// Copy Stockfish executables to assets directory
+// Copy Stockfish executables to assets directory (for NNUE net fallback)
 task copyToAssets(type: Copy, dependsOn: 'externalNativeBuildRelease') {
     from('build/intermediates/ndkBuild/release/obj/local') {
         include '*/stockfish'
         include '*/stockfish_nosimd'
+        include '*/rodent4'
+        include '*/patricia'
     }
     into 'src/main/assets'
 }
-tasks.withType(JavaCompile) {
-    t -> t.dependsOn copyToAssets
+
+// Copy Stockfish executables to jniLibs as lib*.so so Android extracts them
+// to nativeLibraryDir (which has execute permission on Android 10+)
+task copyToJniLibs(dependsOn: 'externalNativeBuildRelease') {
+    doLast {
+        def abis = ['arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64']
+        def baseDir = file('build/intermediates/ndkBuild/release/obj/local')
+        abis.each { abi ->
+            def srcDir = new File(baseDir, abi)
+            def dstDir = file("src/main/jniLibs/${abi}")
+            dstDir.mkdirs()
+            ['stockfish', 'stockfish_nosimd', 'rodent4', 'patricia'].each { name ->
+                def src = new File(srcDir, name)
+                if (src.exists()) {
+                    def dst = new File(dstDir, "lib${name}.so")
+                    dst.bytes = src.bytes
+                }
+            }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn copyToAssets
+    dependsOn copyToJniLibs
 }
 android {
   applicationVariants.all { variant ->
     tasks["merge${variant.name.capitalize()}Assets"]
       .dependsOn(copyToAssets)
+    tasks["merge${variant.name.capitalize()}JniLibFolders"]
+      .dependsOn(copyToJniLibs)
   }
 }

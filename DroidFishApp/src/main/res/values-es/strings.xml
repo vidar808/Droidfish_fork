@@ -218,7 +218,6 @@ Si está usted utilizando la batería, se recomienda que cambie los ajustes para
     <string name="slash_not_allowed">Símbolo / no permitido</string>
     <string name="engine_error">Error del Motor</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Seleccionar motor</string>
     <string name="engine_options">Opciones del motor</string>
     <string name="set_engine_options">Ajuste de opciones</string>
@@ -237,7 +236,6 @@ Si está usted utilizando la batería, se recomienda que cambie los ajustes para
     <string name="network_engine_config_error">Error de configuración en el motor de la red</string>
     <string name="invalid_network_port">Puerto de red no válido</string>
     <string name="start_new_game">¿Empezar nueva partida?</string>
-    <string name="strength_cuckoo_hint">Utilice el motor CuckooChess para rebajar aún más el nivel de juego.</string>
     <string name="piece_names">P C A T D R</string>
     <string name="highlight_last_move_title">Destacar último movimiento</string>
     <string name="highlight_last_move_summary">Enmarcar última pieza jugada</string>
@@ -389,7 +387,7 @@ Si está usted utilizando la batería, se recomienda que cambie los ajustes para
     <string name="prefs_bookTournamentMode_summary">Ignora todas aquellas jugadas no seleccionadas como de torneo</string>
     <string name="prefs_bookRandom_title">Aleatoriedad del Libro de Aperturas</string>
     <string name="prefs_bookFile_title">Nombre del archivo del Libro de Aperturas</string>
-    <string name="prefs_bookFile_summary">Archivo de Libro Polyglot o CTG en el directorio DroidFish de la Tarjeta SD </string>
+    <string name="prefs_bookFile_summary">Archivo de Libro Polyglot, ABK o CTG en el directorio DroidFish de la Tarjeta SD</string>
     <string name="prefs_pgnSettings_title">Ajustes PGN</string>
     <string name="prefs_pgnSettings_summary">Ajustes para importar y exportar datos PGN</string>
     <string name="prefs_pgn_viewer">Visualizador PGN </string>

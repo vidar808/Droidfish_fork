@@ -218,7 +218,6 @@ Um gegebenenfalls Strom zu sparen, ist es empfehlenswert, dass Sie diese Paramet
     <string name="slash_not_allowed">Zeichen / ist nicht erlaubt</string>
     <string name="engine_error">Engine-Fehler</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Schach-Engine auswählen</string>
     <string name="engine_options">Engine-Optionen</string>
     <string name="set_engine_options">Einstellungen festlegen</string>
@@ -237,7 +236,6 @@ Um gegebenenfalls Strom zu sparen, ist es empfehlenswert, dass Sie diese Paramet
     <string name="network_engine_config_error">Fehler bei der Konfiguration der Netzserver-Engine</string>
     <string name="invalid_network_port">Ungültiger Netzwerkport</string>
     <string name="start_new_game">Neue Partie starten?</string>
-    <string name="strength_cuckoo_hint">Nutzen Sie die CuckooChess-Engine für eine noch geringere Spielstärke.</string>
     <string name="piece_names">B S L T D K</string>
     <string name="highlight_last_move_title">Letzten Zug hervorheben</string>
     <string name="highlight_last_move_summary">Zuletzt gezogene Figur mit einem Rechteck markieren</string>
@@ -389,7 +387,7 @@ Um gegebenenfalls Strom zu sparen, ist es empfehlenswert, dass Sie diese Paramet
     <string name="prefs_bookTournamentMode_summary">Züge ignorieren, die nicht für Turnier-Spiele gekennzeichnet sind</string>
     <string name="prefs_bookRandom_title">Buchrandomisierung</string>
     <string name="prefs_bookFile_title">Buch-Dateiname</string>
-    <string name="prefs_bookFile_summary">Polyglot- oder CTG-Datei im DroidFish-Verzeichnis auf der SD-Karte</string>
+    <string name="prefs_bookFile_summary">Polyglot-, ABK- oder CTG-Datei im DroidFish-Verzeichnis auf der SD-Karte</string>
     <string name="prefs_pgnSettings_title">PGN-Einstellungen</string>
     <string name="prefs_pgnSettings_summary">Einstellungen für den Import und den Export von PGN-Daten</string>
     <string name="prefs_pgn_viewer">PGN-Anzeige</string>

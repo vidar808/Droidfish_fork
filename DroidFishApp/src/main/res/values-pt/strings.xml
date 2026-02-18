@@ -218,7 +218,6 @@ Se você está usando somente a bateria, recomenda-se que você mude as configur
     <string name="slash_not_allowed">Caracter não permitido</string>
     <string name="engine_error">Erro do software</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Selecionar software</string>
     <string name="engine_options">Opções do software</string>
     <string name="set_engine_options">Configurar opções</string>
@@ -237,7 +236,6 @@ Se você está usando somente a bateria, recomenda-se que você mude as configur
     <string name="network_engine_config_error">Erro na configuração da rede do software</string>
     <string name="invalid_network_port">Porto de rede inválido</string>
     <string name="start_new_game">Iniciar nova partida?</string>
-    <string name="strength_cuckoo_hint">Use o CuckooChess para um nível ainda menor.</string>
     <string name="piece_names">P C B T D R</string>
     <string name="highlight_last_move_title">Destacar último lance</string>
     <string name="highlight_last_move_summary">Mostrar um retângulo ao redor da última peça movida</string>
@@ -389,7 +387,7 @@ Se você está usando somente a bateria, recomenda-se que você mude as configur
     <string name="prefs_bookTournamentMode_summary">Ignorar lances marcados como não sendo de torneio</string>
     <string name="prefs_bookRandom_title">Aleatoriedade do livro</string>
     <string name="prefs_bookFile_title">Nome do arquivo de livro</string>
-    <string name="prefs_bookFile_summary">Arquivo de livro Polyglot ou CTG no diretório DroidFish no cartão SD</string>
+    <string name="prefs_bookFile_summary">Arquivo de livro Polyglot, ABK ou CTG no diretório DroidFish no cartão SD</string>
     <string name="prefs_pgnSettings_title">Configurações de PGN</string>
     <string name="prefs_pgnSettings_summary">Configurações de importação e exportação de dados em formato PGN</string>
     <string name="prefs_pgn_viewer">Visualizador de PGN</string>

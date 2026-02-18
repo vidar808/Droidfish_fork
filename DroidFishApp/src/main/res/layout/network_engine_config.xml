@@ -8,6 +8,30 @@
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="4dp">
+
+        <Button
+            android:id="@+id/network_engine_scan_qr"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/scan_qr_code" />
+
+        <Button
+            android:id="@+id/network_engine_discover"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="4dp"
+            android:text="@string/discover_servers" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
         android:padding="10dp">
 
         <TextView
@@ -42,5 +66,34 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:inputType="number" />
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/network_engine_tls"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="@string/use_tls" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp">
+
+        <TextView
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:paddingRight="10dp"
+            android:text="@string/auth_token" />
+
+        <EditText
+            android:id="@+id/network_engine_auth_token"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:inputType="textPassword"
+            android:hint="@string/auth_token_hint" />
     </LinearLayout>
 </LinearLayout>

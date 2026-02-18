@@ -218,7 +218,6 @@ Lorsque que vous êtes sur batterie, il est recommandé de changer les paramètr
     <string name="slash_not_allowed">Caractère / non autorisé</string>
     <string name="engine_error">Erreur du module</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Sélectionner le module</string>
     <string name="engine_options">Options du Moteur</string>
     <string name="set_engine_options">Modifier Options</string>
@@ -237,7 +236,6 @@ Lorsque que vous êtes sur batterie, il est recommandé de changer les paramètr
     <string name="network_engine_config_error">Erreur de configuration du module réseau</string>
     <string name="invalid_network_port">Port réseau invalide</string>
     <string name="start_new_game">Commencer une nouvelle partie?</string>
-    <string name="strength_cuckoo_hint">Utilisez le moteur CuckooChess pour un niveau encore plus bas.</string>
     <string name="piece_names">P C F T D R</string>
     <string name="highlight_last_move_title">Mettre en surbrillance le dernier coup</string>
     <string name="highlight_last_move_summary">Afficher un rectangle autour de la dernière pièce jouée</string>
@@ -389,7 +387,7 @@ Lorsque que vous êtes sur batterie, il est recommandé de changer les paramètr
     <string name="prefs_bookTournamentMode_summary">Ignorer les lignes non adaptées à la compétition</string>
     <string name="prefs_bookRandom_title">Lecture aléatoire du livre</string>
     <string name="prefs_bookFile_title">Nom du livre</string>
-    <string name="prefs_bookFile_summary">Fichier Polyglot ou CTG dans le répertoire DroidFish de la carte SD</string>
+    <string name="prefs_bookFile_summary">Fichier Polyglot, ABK ou CTG dans le répertoire DroidFish de la carte SD</string>
     <string name="prefs_pgnSettings_title">Paramètres des PGN</string>
     <string name="prefs_pgnSettings_summary">Paramètres d\'importation et d\'exportation des données PGN</string>
     <string name="prefs_pgn_viewer">Lecteur PGN</string>

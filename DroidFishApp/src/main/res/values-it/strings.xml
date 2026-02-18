@@ -218,7 +218,6 @@ Se l\'alimentazione è a batteria, è consigliabile modificare le impostazioni p
     <string name="slash_not_allowed">Carattere / non consentiti</string>
     <string name="engine_error">Errore del motore</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Seleziona il motore</string>
     <string name="engine_options">Opzioni del motore</string>
     <string name="set_engine_options">Imposta le opzioni</string>
@@ -237,7 +236,6 @@ Se l\'alimentazione è a batteria, è consigliabile modificare le impostazioni p
     <string name="network_engine_config_error">Errore di configurazione del Motore di Rete</string>
     <string name="invalid_network_port">Porta di rete non valida</string>
     <string name="start_new_game">Iniziare una nuova partita?</string>
-    <string name="strength_cuckoo_hint">Utilizzare il motore CuckooChess per una forza ancora più bassa.</string>
     <string name="piece_names">P C A T D R</string>
     <string name="highlight_last_move_title">Evidenziare l\'ultima mossa</string>
     <string name="highlight_last_move_summary">Disegna un rettangolo intorno all\'ultimo pezzo spostato</string>
@@ -389,7 +387,7 @@ Se l\'alimentazione è a batteria, è consigliabile modificare le impostazioni p
     <string name="prefs_bookTournamentMode_summary">Ignora mosse contrassegnate come non per tornei</string>
     <string name="prefs_bookRandom_title">Casualizzazione del libro</string>
     <string name="prefs_bookFile_title">Nome del file del Libro</string>
-    <string name="prefs_bookFile_summary">File dei database Polyglot o CTG nella cartella di DroidFish nella scheda SD</string>
+    <string name="prefs_bookFile_summary">File dei database Polyglot, ABK o CTG nella cartella di DroidFish nella scheda SD</string>
     <string name="prefs_pgnSettings_title">Impostazioni del formato PGN</string>
     <string name="prefs_pgnSettings_summary">Impostazioni per l\'importazione e l\'esportazione dei dati in notazione portable game (PGN)</string>
     <string name="prefs_pgn_viewer">Visualizzatore PGN</string>

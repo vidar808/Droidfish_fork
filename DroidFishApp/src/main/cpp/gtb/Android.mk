@@ -15,7 +15,7 @@ LOCAL_SRC_FILES := \
 	GtbProbe.cpp
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  LOCAL_ARM_NEON := false
+  LOCAL_ARM_NEON := true
 endif
 
 LOCAL_CFLAGS    := \

@@ -218,7 +218,6 @@ Als uw telefoon op batterij werkt is het aan te raden om deze instellingen te wi
     <string name="slash_not_allowed">Teken niet toegestaan</string>
     <string name="engine_error">Engine fout</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Selecteer engine</string>
     <string name="engine_options">Engine instellingen</string>
     <string name="set_engine_options">Opties</string>
@@ -237,7 +236,6 @@ Als uw telefoon op batterij werkt is het aan te raden om deze instellingen te wi
     <string name="network_engine_config_error">Netwerk engine configuratie fout</string>
     <string name="invalid_network_port">Ongeldige netwerk poort</string>
     <string name="start_new_game">Nieuwe partij?</string>
-    <string name="strength_cuckoo_hint">Gebruik CuckooChess engine voor een lagere speelsterkte</string>
     <string name="piece_names">pi P L T D K</string>
     <string name="highlight_last_move_title">Laatste zet markeren</string>
     <string name="highlight_last_move_summary">Laatst bewogen stuk markeren</string>
@@ -389,7 +387,7 @@ Als uw telefoon op batterij werkt is het aan te raden om deze instellingen te wi
     <string name="prefs_bookTournamentMode_summary">Negeer de zetten die niet als toernooi zetten gemarkeerd zijn</string>
     <string name="prefs_bookRandom_title">Willekeurige openingsboek zetten</string>
     <string name="prefs_bookFile_title">Bestandsnaam openingsboek</string>
-    <string name="prefs_bookFile_summary">Polyglot- of CTG boekbestand in de DroidFish directory op de SD kaart</string>
+    <string name="prefs_bookFile_summary">Polyglot-, ABK- of CTG boekbestand in de DroidFish directory op de SD kaart</string>
     <string name="prefs_pgnSettings_title">PGN Instellingen</string>
     <string name="prefs_pgnSettings_summary">Instellingen voor import en export PGN data</string>
     <string name="prefs_pgn_viewer">PGN Viewer</string>

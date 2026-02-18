@@ -41,12 +41,12 @@ public class LocalPipe {
     public final synchronized void addLine(String line) {
         while (lines.size() > 10000) {
             try {
-                wait(10);
+                wait();
             } catch (InterruptedException ignore) {
             }
         }
         lines.add(line);
-        notify();
+        notifyAll();
     }
 
     /** Read a line from the pipe. Returns null on failure. */
@@ -67,8 +67,8 @@ public class LocalPipe {
             }
             if (lines.isEmpty())
                 return closed ? null : "";
-            String ret = lines.get(0);
-            lines.remove(0);
+            String ret = lines.remove(0);
+            notifyAll();
             return ret;
         } catch (InterruptedException e) {
             return null;

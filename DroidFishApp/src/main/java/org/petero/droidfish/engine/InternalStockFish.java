@@ -32,12 +32,14 @@ import java.util.Arrays;
 import java.util.Locale;
 
 import android.os.Environment;
+import android.util.Log;
 
 import org.petero.droidfish.EngineOptions;
 
 /** Stockfish engine running as process, started from assets resource. */
 public class InternalStockFish extends ExternalEngine {
-    private static final String[] defaultNets = {"nn-b1a57edbea57.nnue", "nn-baff1ede1f90.nnue"};
+    private static final String TAG = "InternalStockFish";
+    private static final String[] defaultNets = {"nn-c288c895ea92.nnue", "nn-37f18f62d772.nnue"};
     private static final String[] netOptions = {"evalfile", "evalfilesmall"};
     private final File[] defaultNetFiles = {null, null}; // Full path of the copied default network files
 
@@ -105,19 +107,23 @@ public class InternalStockFish extends ExternalEngine {
 
     @Override
     protected String copyFile(File from, File exeDir) throws IOException {
-        File to = new File(exeDir, "engine.exe");
-        final String sfExe = EngineUtil.internalStockFishName();
-
-        // The checksum test is to avoid writing to /data unless necessary,
-        // on the assumption that it will reduce memory wear.
-        long oldCSum = readCheckSum(new File(internalSFPath()));
-        long newCSum = computeAssetsCheckSum(sfExe);
-        if (oldCSum != newCSum) {
-            copyAssetFile(sfExe, to);
-            writeCheckSum(new File(internalSFPath()), newCSum);
-        }
+        // On Android 10+, app data directories are noexec. The Stockfish
+        // executable is packaged as lib*.so in jniLibs, so Android extracts
+        // it to nativeLibraryDir which has execute permission.
+        String exePath = EngineUtil.internalStockFishPath(context);
+        Log.d(TAG, "Internal Stockfish path: " + exePath);
+        File exeFile = new File(exePath);
+        Log.d(TAG, "Stockfish exists: " + exeFile.exists() + ", size: " + exeFile.length());
+        Log.d(TAG, "Copying NNUE net files to: " + exeDir.getAbsolutePath());
         copyNetFiles(exeDir);
-        return to.getAbsolutePath();
+        Log.d(TAG, "NNUE files copied successfully");
+        return exePath;
+    }
+
+    @Override
+    protected void chmod(String exePath) {
+        // No-op: files in nativeLibraryDir are already executable
+        // and owned by the system (chmod would fail with EPERM).
     }
 
     /** Copy the Stockfish default network files to "exeDir" if they are not already there. */

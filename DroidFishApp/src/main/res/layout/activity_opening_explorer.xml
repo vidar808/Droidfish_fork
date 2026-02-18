@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FF161512">
+
+    <!-- Chess board -->
+    <org.petero.droidfish.activities.util.ChessBoardExplorer
+        android:id="@+id/explorerBoard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Back / Forward buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#FF1E1C19">
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="\u25C0"
+            android:textSize="14sp"
+            android:textColor="#FFBAB6AD"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <Button
+            android:id="@+id/btnForward"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="\u25B6"
+            android:textSize="14sp"
+            android:textColor="#FFBAB6AD"
+            android:background="?android:attr/selectableItemBackground" />
+    </LinearLayout>
+
+    <!-- Database tab selector: Masters | Lichess | Player -->
+    <LinearLayout
+        android:id="@+id/dbTabs"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:orientation="horizontal"
+        android:background="#FF2B2926"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tabMasters"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/explorer_db_masters"
+            android:textSize="13sp"
+            android:textColor="#FFBAB6AD"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/tabLichess"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/explorer_db_lichess"
+            android:textSize="13sp"
+            android:textColor="#FFBAB6AD"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/tabPlayer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/explorer_db_player"
+            android:textSize="13sp"
+            android:textColor="#FFBAB6AD"
+            android:background="?android:attr/selectableItemBackground" />
+    </LinearLayout>
+
+    <!-- Opening name (always visible: shows ECO + name, or "Opening Explorer" at start) -->
+    <TextView
+        android:id="@+id/openingName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="2dp"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="#FFE8E6E3"
+        android:background="#FF1E1C19"
+        android:text="@string/opening_explorer_title" />
+
+    <!-- Move path: "1. e4 e5 2. Nf3 Nc6" -->
+    <TextView
+        android:id="@+id/movePath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:paddingBottom="2dp"
+        android:textSize="12sp"
+        android:textColor="#99BAB6AD"
+        android:background="#FF1E1C19"
+        android:visibility="gone" />
+
+    <!-- Table header: Move | Games | White/Draw/Black -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:background="#FF2B2926">
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="wrap_content"
+            android:text="@string/explorer_hdr_move"
+            android:textSize="11sp"
+            android:textColor="#99BAB6AD" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="@string/explorer_hdr_games"
+            android:textSize="11sp"
+            android:textColor="#99BAB6AD"
+            android:gravity="end"
+            android:paddingRight="6dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/explorer_hdr_wdb"
+            android:textSize="11sp"
+            android:textColor="#99BAB6AD"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Explorer move rows -->
+    <ListView
+        android:id="@+id/moveList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="#1ABAB6AD"
+        android:dividerHeight="1dp"
+        android:background="#FF161512" />
+
+    <!-- Loading / empty state -->
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:textSize="13sp"
+        android:textColor="#99BAB6AD"
+        android:background="#FF161512"
+        android:visibility="gone" />
+
+</LinearLayout>

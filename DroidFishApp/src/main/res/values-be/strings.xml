@@ -218,7 +218,6 @@
     <string name="slash_not_allowed">Знак / не дапушчаецца</string>
     <string name="engine_error">Абмыла рухавічка</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Выбраць рухавічок</string>
     <string name="engine_options">Параметры рухавічка</string>
     <string name="set_engine_options">Параметры SET</string>
@@ -237,7 +236,6 @@
     <string name="network_engine_config_error">Абмыла канфігурацыі сеткавага рухавічка</string>
     <string name="invalid_network_port">Недапушчальны сеткавы порт</string>
     <string name="start_new_game">Пачаць новую партыю?</string>
-    <string name="strength_cuckoo_hint">Скарыстаць рухавічок CuckooChess для найменшага роўня складанасці.</string>
     <string name="piece_names">П К А Л Ф Кр</string>
     <string name="highlight_last_move_title">Падсвятляць апошні ход</string>
     <string name="highlight_last_move_summary">Намаляваць прастакутнік вакол апошняй перасунутай фігуры</string>
@@ -389,7 +387,7 @@
     <string name="prefs_bookTournamentMode_summary">Ігнараваць крокі, адзначаныя як не дзеля турнірных партый</string>
     <string name="prefs_bookRandom_title">Рандамізацыя кнігі</string>
     <string name="prefs_bookFile_title">Імя файла кнігі</string>
-    <string name="prefs_bookFile_summary">Polyglot ці CTG-файл кнігі ў дырэкторыі DroidFish на SD-карце</string>
+    <string name="prefs_bookFile_summary">Polyglot, ABK ці CTG-файл кнігі ў дырэкторыі DroidFish на SD-карце</string>
     <string name="prefs_pgnSettings_title">Налады PGN</string>
     <string name="prefs_pgnSettings_summary">Налады для імпарту і экспарту PGN дадзеных</string>
     <string name="prefs_pgn_viewer">Прагляд PGN</string>

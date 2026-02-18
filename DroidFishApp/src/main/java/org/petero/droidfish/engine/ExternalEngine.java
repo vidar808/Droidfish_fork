@@ -19,21 +19,28 @@
 package org.petero.droidfish.engine;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import org.petero.droidfish.DroidFishApp;
 import org.petero.droidfish.EngineOptions;
 import org.petero.droidfish.R;
 import android.content.Context;
+import android.util.Log;
 
 /** Engine running as a process started from an external resource. */
 public class ExternalEngine extends UCIEngineBase {
+    private static final String TAG = "ExternalEngine";
     protected final Context context;
 
     private File engineFileName;
@@ -44,7 +51,9 @@ public class ExternalEngine extends UCIEngineBase {
     private Thread exitThread;
     private Thread stdInThread;
     private Thread stdErrThread;
+    private Thread stdOutThread;
     private final LocalPipe inLines;
+    private final LocalPipe outLines;
     private boolean startedOk;
     private boolean isRunning;
 
@@ -58,7 +67,9 @@ public class ExternalEngine extends UCIEngineBase {
         exitThread = null;
         stdInThread = null;
         stdErrThread = null;
+        stdOutThread = null;
         inLines = new LocalPipe();
+        outLines = new LocalPipe();
         startedOk = false;
         isRunning = false;
     }
@@ -67,20 +78,65 @@ public class ExternalEngine extends UCIEngineBase {
         return context.getFilesDir().getAbsolutePath() + "/internal_sf";
     }
 
+    /** Override to configure ProcessBuilder before the engine process starts.
+     *  Subclasses can use this to set environment variables or other options. */
+    protected void configureProcessBuilder(ProcessBuilder pb) {
+        // Default: no-op
+    }
+
+    /** Return log file for engine stderr output. Tries external storage first,
+     *  falls back to app-internal storage. Returns null if neither works. */
+    private File getEngineLogFile() {
+        String engineName = engineFileName.getName();
+        if (engineName.startsWith("lib") && engineName.endsWith(".so"))
+            engineName = engineName.substring(3, engineName.length() - 3);
+        String logName = engineName + ".log";
+
+        // Try external storage: DroidFish/uci/logs/
+        try {
+            File extDir = android.os.Environment.getExternalStorageDirectory();
+            File logDir = new File(extDir, "DroidFish/uci/logs");
+            if (logDir.isDirectory() || logDir.mkdirs()) {
+                File logFile = new File(logDir, logName);
+                return logFile;
+            }
+        } catch (Exception ignore) {
+        }
+
+        // Fallback: app-internal storage
+        try {
+            File logDir = new File(context.getFilesDir(), "engine-logs");
+            logDir.mkdirs();
+            return new File(logDir, logName);
+        } catch (Exception ignore) {
+        }
+        return null;
+    }
+
     @Override
     protected void startProcess() {
         try {
             File exeDir = new File(context.getFilesDir(), "engine");
             exeDir.mkdir();
+            Log.d(TAG, "Engine exeDir: " + exeDir.getAbsolutePath());
             String exePath = copyFile(engineFileName, exeDir);
+            File exeFile = new File(exePath);
+            Log.d(TAG, "Engine exe path: " + exePath);
+            Log.d(TAG, "Engine exe exists: " + exeFile.exists() +
+                       ", size: " + exeFile.length() +
+                       ", canRead: " + exeFile.canRead() +
+                       ", canExecute: " + exeFile.canExecute());
             chmod(exePath);
             cleanUpExeDir(exeDir, exePath);
             ProcessBuilder pb = new ProcessBuilder(exePath);
             if (engineWorkDir.canRead() && engineWorkDir.isDirectory())
                 pb.directory(engineWorkDir);
+            configureProcessBuilder(pb);
+            Log.d(TAG, "Starting engine process...");
             synchronized (EngineUtil.nativeLock) {
                 engineProc = pb.start();
             }
+            Log.d(TAG, "Engine process started successfully");
             reNice();
 
             startupThread = new Thread(() -> {
@@ -89,8 +145,12 @@ public class ExternalEngine extends UCIEngineBase {
                 } catch (InterruptedException e) {
                     return;
                 }
-                if (startedOk && isRunning && !isUCI)
+                if (!startedOk) {
+                    Log.e(TAG, "Engine produced no output after 10s");
+                    report.reportError("Engine not responding - no output after 10s. Path: " + exePath);
+                } else if (isRunning && !isUCI) {
                     report.reportError(context.getString(R.string.uci_protocol_error));
+                }
             });
             startupThread.start();
 
@@ -100,9 +160,11 @@ public class ExternalEngine extends UCIEngineBase {
                     if (ep != null)
                         ep.waitFor();
                     isRunning = false;
-                    if (!startedOk)
+                    if (!startedOk) {
+                        Log.e(TAG, "Engine process exited before producing output. Path: " + exePath);
                         report.reportError(context.getString(R.string.failed_to_start_engine));
-                    else {
+                    } else {
+                        Log.w(TAG, "Engine process terminated");
                         report.reportError(context.getString(R.string.engine_terminated));
                     }
                 } catch (InterruptedException ignore) {
@@ -124,6 +186,8 @@ public class ExternalEngine extends UCIEngineBase {
                     while ((line = br.readLine()) != null) {
                         if (Thread.currentThread().isInterrupted())
                             return;
+                        if (first)
+                            Log.d(TAG, "Engine first output: " + line);
                         synchronized (inLines) {
                             inLines.addLine(line);
                             if (first) {
@@ -133,35 +197,88 @@ public class ExternalEngine extends UCIEngineBase {
                             }
                         }
                     }
-                } catch (IOException ignore) {
+                    Log.d(TAG, "Engine stdout stream ended");
+                } catch (IOException e) {
+                    Log.w(TAG, "Engine stdout read error: " + e.getMessage());
                 }
                 inLines.close();
             });
             stdInThread.start();
 
-            // Start a thread to ignore stderr
+            // Start a thread to read and log stderr (to logcat + log file)
             stdErrThread = new Thread(() -> {
-                byte[] buffer = new byte[128];
-                while (true) {
-                    Process ep = engineProc;
-                    if ((ep == null) || Thread.currentThread().isInterrupted())
-                        return;
-                    try {
-                        int len = ep.getErrorStream().read(buffer, 0, 1);
-                        if (len < 0)
+                Process ep = engineProc;
+                if (ep == null)
+                    return;
+                BufferedWriter logWriter = null;
+                try {
+                    File logFile = getEngineLogFile();
+                    if (logFile != null) {
+                        logWriter = new BufferedWriter(new FileWriter(logFile, true));
+                        SimpleDateFormat sdf = new SimpleDateFormat(
+                                "yyyy-MM-dd HH:mm:ss", Locale.US);
+                        logWriter.write("--- Engine started " + sdf.format(new Date()) + " ---\n");
+                        logWriter.flush();
+                    }
+                } catch (IOException e) {
+                    Log.w(TAG, "Could not open engine log file: " + e.getMessage());
+                }
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(ep.getErrorStream()), 4096)) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        if (Thread.currentThread().isInterrupted())
                             break;
-                    } catch (IOException e) {
-                        return;
+                        Log.w(TAG, "Engine stderr: " + line);
+                        if (logWriter != null) {
+                            try {
+                                logWriter.write(line);
+                                logWriter.newLine();
+                                logWriter.flush();
+                            } catch (IOException ignore) {
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    // stream closed
+                } finally {
+                    if (logWriter != null) {
+                        try { logWriter.close(); } catch (IOException ignore) {}
                     }
                 }
             });
             stdErrThread.start();
+
+            // Start a thread to write data to engine
+            stdOutThread = new Thread(() -> {
+                try {
+                    String line;
+                    while ((line = outLines.readLine()) != null) {
+                        if (Thread.currentThread().isInterrupted())
+                            return;
+                        Process ep = engineProc;
+                        if (ep == null)
+                            return;
+                        line += "\n";
+                        ep.getOutputStream().write(line.getBytes());
+                        ep.getOutputStream().flush();
+                    }
+                } catch (IOException e) {
+                    Log.w(TAG, "Engine write error: " + e.getMessage());
+                }
+            });
+            stdOutThread.start();
         } catch (IOException | SecurityException ex) {
-            report.reportError(ex.getMessage());
+            Log.e(TAG, "Engine startup failed: " + ex.getMessage(), ex);
+            report.reportError("Engine startup failed: " + ex.getMessage());
         }
     }
 
-    /** Try to lower the engine process priority. */
+    /** Try to lower the engine process priority.
+     *  Uses reflection to access the private "pid" field of the Process object
+     *  because the standard Java Process API does not expose the native PID
+     *  (prior to Java 9's Process.pid()). The priority is lowered via a JNI
+     *  call to setpriority(2) so the engine doesn't starve the UI thread. */
     private void reNice() {
         try {
             java.lang.reflect.Field f = engineProc.getClass().getDeclaredField("pid");
@@ -250,19 +367,9 @@ public class ExternalEngine extends UCIEngineBase {
         return ret;
     }
 
-    // XXX Writes should be handled by separate thread.
     @Override
     public void writeLineToEngine(String data) {
-//        System.out.printf("GUI -> Engine: %s\n", data);
-        data += "\n";
-        try {
-            Process ep = engineProc;
-            if (ep != null) {
-                ep.getOutputStream().write(data.getBytes());
-                ep.getOutputStream().flush();
-            }
-        } catch (IOException ignore) {
-        }
+        outLines.addLine(data);
     }
 
     @Override
@@ -284,10 +391,13 @@ public class ExternalEngine extends UCIEngineBase {
             engineProc.destroy();
         }
         engineProc = null;
+        outLines.close();
         if (stdInThread != null)
             stdInThread.interrupt();
         if (stdErrThread != null)
             stdErrThread.interrupt();
+        if (stdOutThread != null)
+            stdOutThread.interrupt();
     }
 
     protected String copyFile(File from, File exeDir) throws IOException {
@@ -308,7 +418,7 @@ public class ExternalEngine extends UCIEngineBase {
         return to.getAbsolutePath();
     }
 
-    private void chmod(String exePath) throws IOException {
+    protected void chmod(String exePath) throws IOException {
         if (!EngineUtil.chmod(exePath))
             throw new IOException("chmod failed");
     }

@@ -222,7 +222,6 @@ DroidFish는 백그라운드에 실행 중인 상태에서 다음과 같이 설�
     <string name="slash_not_allowed">문자 / 허용되지 않음</string>
     <string name="engine_error">엔진 오류</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">엔진 선택</string>
     <string name="engine_options">엔진 옵션</string>
     <string name="set_engine_options">설정된 옵션</string>
@@ -241,7 +240,6 @@ DroidFish는 백그라운드에 실행 중인 상태에서 다음과 같이 설�
     <string name="network_engine_config_error">네트워크 엔진 구성 오류</string>
     <string name="invalid_network_port">잘못된 네트워크 포트</string>
     <string name="start_new_game">새 게임을 시작할까요?</string>
-    <string name="strength_cuckoo_hint">더 낮은 강도를 위해서 CuckooChess 엔진을 사용합니다.</string>
     <string name="piece_names">P N B R Q K</string>
     <string name="highlight_last_move_title">마지막 이동 강조</string>
     <string name="highlight_last_move_summary">마지막 이동된 조각 주위에 사각형을 그립니다</string>
@@ -393,7 +391,7 @@ DroidFish는 백그라운드에 실행 중인 상태에서 다음과 같이 설�
     <string name="prefs_bookTournamentMode_summary">토너먼트 플레이가 아닌 것으로 표시된 움직임 무시</string>
     <string name="prefs_bookRandom_title">북 랜덤화</string>
     <string name="prefs_bookFile_title">북 파일 이름</string>
-    <string name="prefs_bookFile_summary">SD 카드의 DroidFish 디렉토리에 있는 Polyglot 또는 CTG 북 파일</string>
+    <string name="prefs_bookFile_summary">SD 카드의 DroidFish 디렉토리에 있는 Polyglot, ABK 또는 CTG 북 파일</string>
     <string name="prefs_pgnSettings_title">PGN 설정</string>
     <string name="prefs_pgnSettings_summary">포터블 게임 노테이션(PGN) 데이터 불러오기 &amp; 내보내기 설정</string>
     <string name="prefs_pgn_viewer">PGN 뷰어</string>

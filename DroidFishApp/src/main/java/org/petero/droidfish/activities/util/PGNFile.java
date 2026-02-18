@@ -19,12 +19,15 @@
 package org.petero.droidfish.activities.util;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
@@ -33,16 +36,34 @@ import org.petero.droidfish.R;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.net.Uri;
 import android.widget.Toast;
 
 public class PGNFile {
     private final File fileName;
+    private Uri contentUri;
+    private ContentResolver resolver;
 
     public PGNFile(String fileName) {
         this.fileName = new File(fileName);
     }
 
+    /** SAF-compatible constructor for content:// URIs. */
+    public PGNFile(Uri uri, ContentResolver resolver) {
+        this.fileName = null;
+        this.contentUri = uri;
+        this.resolver = resolver;
+    }
+
+    /** Returns true if this PGNFile uses a content:// URI. */
+    public boolean isContentUri() {
+        return contentUri != null;
+    }
+
     public String getName() {
+        if (contentUri != null)
+            return contentUri.toString();
         return fileName.getAbsolutePath();
     }
 
@@ -214,9 +235,20 @@ public class PGNFile {
 
     private ArrayList<GameInfo> getGameInfoFromFile(ProgressHandler progress,
                                                     int maxGames) throws IOException {
-        try (InputStream is = new FileInputStream(fileName)) {
+        try (InputStream is = openInputStream()) {
             return getGameInfo(is, progress, maxGames);
         }
+    }
+
+    /** Open an InputStream for this PGN file (File or content:// URI). */
+    private InputStream openInputStream() throws IOException {
+        if (contentUri != null && resolver != null) {
+            InputStream is = resolver.openInputStream(contentUri);
+            if (is == null)
+                throw new IOException("Cannot open content URI: " + contentUri);
+            return is;
+        }
+        return new FileInputStream(fileName);
     }
 
     /** Return info about PGN games in a file. */
@@ -411,6 +443,9 @@ public class PGNFile {
 
     /** Read one game defined by gi. Return null on failure. */
     public String readOneGame(GameInfo gi) {
+        if (contentUri != null && resolver != null) {
+            return readOneGameFromUri(gi);
+        }
         try (RandomAccessFile f = new RandomAccessFile(fileName, "r")) {
             byte[] pgnData = new byte[(int) (gi.endPos - gi.startPos)];
             f.seek(gi.startPos);
@@ -421,11 +456,66 @@ public class PGNFile {
         return null;
     }
 
+    /** Read one game from a content:// URI (no random access). */
+    private String readOneGameFromUri(GameInfo gi) {
+        try (InputStream is = resolver.openInputStream(contentUri)) {
+            if (is == null) return null;
+            long skipped = 0;
+            while (skipped < gi.startPos) {
+                long n = is.skip(gi.startPos - skipped);
+                if (n <= 0) break;
+                skipped += n;
+            }
+            int len = (int) (gi.endPos - gi.startPos);
+            byte[] pgnData = new byte[len];
+            int read = 0;
+            while (read < len) {
+                int n = is.read(pgnData, read, len - read);
+                if (n <= 0) break;
+                read += n;
+            }
+            return new String(pgnData, 0, read);
+        } catch (IOException ignore) {
+        }
+        return null;
+    }
+
     /** Append PGN to the end of this PGN file. */
     public void appendPGN(String pgn, boolean silent) {
+        if (contentUri != null && resolver != null) {
+            appendPGNToUri(pgn, silent);
+            return;
+        }
         mkDirs();
         try (FileWriter fw = new FileWriter(fileName, true)) {
             fw.write(pgn);
+            if (!silent)
+                DroidFishApp.toast(R.string.game_saved, Toast.LENGTH_SHORT);
+        } catch (IOException e) {
+            DroidFishApp.toast(R.string.failed_to_save_game, Toast.LENGTH_SHORT);
+        }
+    }
+
+    /** Append PGN to a content:// URI. */
+    private void appendPGNToUri(String pgn, boolean silent) {
+        try {
+            // Read existing content
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (InputStream is = resolver.openInputStream(contentUri)) {
+                if (is != null) {
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = is.read(buf)) > 0)
+                        baos.write(buf, 0, n);
+                }
+            }
+            // Write existing + new content
+            try (OutputStream os = resolver.openOutputStream(contentUri, "wt")) {
+                if (os != null) {
+                    os.write(baos.toByteArray());
+                    os.write(pgn.getBytes());
+                }
+            }
             if (!silent)
                 DroidFishApp.toast(R.string.game_saved, Toast.LENGTH_SHORT);
         } catch (IOException e) {

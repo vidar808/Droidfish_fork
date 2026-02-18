@@ -91,7 +91,7 @@ If you are running on battery power, it is recommended that you change settings 
     <string name="reading_fen_file">Reading FEN/EPD file…</string>
     <string name="reading_scid_file">Reading Scid file…</string>
     <string name="new_file">&lt;New File&gt;</string>
-    <string name="new_engine">&lt;New Engine&gt;</string>
+    <string name="new_engine">&lt;New Server&gt;</string>
     <string name="no_pgn_files">No files found in directory DroidFish/pgn on the SD card</string>
     <string name="no_fen_files">No files found in directory DroidFish/epd on the SD card</string>
     <string name="select_color_theme">Select Color Theme</string>
@@ -175,6 +175,12 @@ If you are running on battery power, it is recommended that you change settings 
     <string name="resign_white">Game over, white resigns!</string>
     <string name="resign_black">Game over, black resigns!</string>
     <string name="book">Book:</string>
+    <string name="prefs_lichessExplorer_title">Lichess Opening Explorer</string>
+    <string name="prefs_lichessExplorer_summary">Use online Lichess database for opening moves (requires internet). When enabled, takes precedence over the local opening book.</string>
+    <string name="prefs_lichessExplorerDb_title">Explorer Database</string>
+    <string name="prefs_lichessExplorerDb_summary">Select which game database to query</string>
+    <string name="prefs_lichessPlayerName_title">Lichess Username</string>
+    <string name="prefs_lichessPlayerName_summary">Your Lichess username (for Player database)</string>
     <string name="invalid_move">Invalid move</string>
     <string name="piece_can_not_be_moved">Piece can not be moved</string>
     <string name="preferences">Preferences</string>
@@ -217,17 +223,21 @@ If you are running on battery power, it is recommended that you change settings 
     <string name="engine_name_in_use">Engine name in use</string>
     <string name="slash_not_allowed">Character &#47; not allowed</string>
     <string name="engine_error">Engine error</string>
-    <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
+    <string name="stockfish_engine">Stockfish 18</string>
+    <string name="rodent_engine">Rodent IV</string>
+    <string name="patricia_engine">Patricia</string>
     <string name="select_engine">Select Engine</string>
     <string name="engine_options">Engine Options</string>
     <string name="set_engine_options">Set options</string>
-    <string name="configure_network_engine">Configure Network Engine</string>
-    <string name="create_network_engine">Create Network Engine</string>
-    <string name="delete_network_engine">Delete Network Engine?</string>
-    <string name="host_name">Host name</string>
+    <string name="configure_network_engine">Configure Network Server</string>
+    <string name="configure_engine_uci_options">Configure Network Engine</string>
+    <string name="engine_activated_toast">Engine activated. Use \u2018Set Options\u2019 after connection.</string>
+    <string name="engine_connecting_toast">Engine is still connecting. Try \u2018Set Options\u2019 when ready.</string>
+    <string name="create_network_engine">New Network Server</string>
+    <string name="delete_network_engine">Delete Network Server?</string>
+    <string name="host_name">Host / IP</string>
     <string name="network_port">Port</string>
-    <string name="network_engine">Network Engine</string>
+    <string name="network_engine">Network Server</string>
     <string name="failed_to_start_engine">Failed to start engine</string>
     <string name="tts_failed_to_init">Failed to initialize text to speech</string>
     <string name="tts_data_missing">Text to speech data missing</string>
@@ -236,8 +246,59 @@ If you are running on battery power, it is recommended that you change settings 
     <string name="uci_protocol_error">UCI protocol error</string>
     <string name="network_engine_config_error">Network engine configuration error</string>
     <string name="invalid_network_port">Invalid network port</string>
+    <string name="net_engine_setup_guide">Setup Guide</string>
+    <string name="net_setup_guide_text">Network engines let DroidFish connect to a chess engine running on another computer (PC, Mac, or server) over your local network or the internet.\n\n\u25B6 What you need:\n\u2022 A computer running Chess-UCI-Server (Python) or DroidFish EngineServer (Java)\n\u2022 A UCI chess engine installed on that computer (e.g. Stockfish)\n\u2022 Both devices on the same network, or a public IP / port forwarding\n\n\u25B6 Quick start:\n1. Download Chess-UCI-Server from:\n   github.com/vidar808/Chess-UCI-Server_Droidfish\n2. Configure config.json with your engine path and a port (e.g. 8001)\n3. Run: python chess.py\n4. In DroidFish, tap \u201CNew Server\u201D\n5. Enter the server\u2019s IP address and port\n6. Tap \u201CTest Connection\u201D to verify\n\n\u25B6 Firewall:\nYou must open the configured port in your computer\u2019s firewall. The server listens on one TCP port per engine.\n\u2022 Windows: netsh advfirewall firewall add rule name=\"Chess UCI\" dir=in action=allow protocol=TCP localport=8001\n\u2022 Linux: sudo ufw allow 8001/tcp\n\u2022 macOS: Add exception in System Settings \u2192 Network \u2192 Firewall\n\n\u25B6 Optional features:\n\u2022 TLS encryption \u2014 encrypts all traffic between app and server\n\u2022 Token authentication \u2014 prevents unauthorized connections\n\u2022 QR code pairing \u2014 scan a QR code to auto-fill connection settings\n\u2022 mDNS discovery \u2014 tap Discover to find servers on your local network\n\n\u25B6 Troubleshooting:\n\u2022 \"Connection refused\" \u2014 check the server is running and the port is correct\n\u2022 \"Unknown host\" \u2014 verify the IP address or hostname\n\u2022 \"Connection timed out\" \u2014 check firewall rules and that both devices are on the same network\n\u2022 \"Auth failed\" \u2014 verify the auth token matches the server configuration</string>
+    <string name="net_config_port_hint">You may need to open this port in your firewall</string>
+    <string name="net_config_host_hint">e.g. 192.168.1.100 or my-server.local</string>
+    <string name="auth_failed">Authentication failed</string>
+    <string name="auth_required_mismatch">Server requires authentication but none configured. Re-scan QR code.</string>
+    <string name="use_tls">Use TLS encryption</string>
+    <string name="auth_token">Auth token</string>
+    <string name="auth_token_hint">Leave empty for no auth</string>
+    <string name="scan_qr_code">Scan QR Code</string>
+    <string name="qr_scan_failed">QR scan failed or cancelled</string>
+    <string name="qr_invalid_payload">Invalid QR code (not a chess-uci-server code)</string>
+    <string name="qr_engines_found">Found %1$d engine(s) on %2$s</string>
+    <string name="qr_camera_permission">Camera permission is required to scan QR codes</string>
+    <string name="discover_servers">Discover</string>
+    <string name="discovering_servers">Searching for servers...</string>
+    <string name="no_servers_found">No servers found on local network</string>
+    <string name="select_discovered_engine">Select Engine</string>
+    <string name="quick_play">Quick Play</string>
+    <string name="quick_play_title">Quick Play</string>
+    <string name="play_as">Play as</string>
+    <string name="engine_strength">Engine Strength</string>
+    <string name="time_control_label">Time Control</string>
+    <string name="start_game">Start Game</string>
     <string name="start_new_game">Start New Game?</string>
-    <string name="strength_cuckoo_hint">Use the CuckooChess engine for even lower strength.</string>
+    <!-- Network engine config activity -->
+    <string name="net_config_section_discovery">Discovery</string>
+    <string name="net_config_section_connection">Connection</string>
+    <string name="net_config_section_security">Security</string>
+    <string name="net_config_security_method">Method</string>
+    <string name="net_config_psk_key">PSK Key</string>
+    <string name="net_config_fingerprint">Cert Fingerprint</string>
+    <string name="net_config_test_connection">Test Connection</string>
+    <string name="net_config_save">Save</string>
+    <string name="net_config_test_success">Connected to %1$s in %2$dms</string>
+    <string name="net_config_test_auth_failed">Authentication failed</string>
+    <string name="net_config_test_timeout">Connection timed out</string>
+    <string name="net_config_test_timeout_hint">Check that the server is running and that port %s is open in the firewall</string>
+    <string name="net_config_test_refused">Connection refused</string>
+    <string name="net_config_test_tls_failed">TLS handshake failed</string>
+    <string name="net_config_test_unknown_host">Unknown host: %s</string>
+    <string name="net_config_test_no_uci">No UCI response from engine</string>
+    <string name="net_config_test_error">Connection error: %s</string>
+    <string name="net_config_configure_all">Configure All</string>
+    <string name="net_config_select_engines">Select engines to configure</string>
+    <string name="net_config_engines_added">Added %d engine(s)</string>
+    <string name="net_config_auth_none">None</string>
+    <string name="net_config_auth_token">TLS + Token</string>
+    <string name="net_config_auth_psk">PSK</string>
+    <string name="net_config_fingerprint_mismatch">Certificate fingerprint mismatch</string>
+    <string name="net_config_title">Network Server Config</string>
+    <string name="net_config_import_file">Import Connection File</string>
+    <string name="net_config_not_chessuci">Not a .chessuci file</string>
     <string name="piece_names">P N B R Q K</string>
     <string name="highlight_last_move_title">Highlight last move</string>
     <string name="highlight_last_move_summary">Draw rectangle around last moved piece</string>
@@ -806,4 +867,40 @@ If you are running on battery power, it is recommended that you change settings 
         <item>German Speech</item>
         <item>Spanish Speech</item>
     </string-array>
+    <string name="option_opening_explorer">Opening Explorer</string>
+    <string name="opening_explorer_title">Opening Explorer</string>
+    <string name="explorer_loading">Loading\u2026</string>
+    <string name="explorer_no_data">No games found for this position</string>
+    <string name="explorer_player_name_required">Set a Lichess username in Settings \u2192 Opening Book to use Player database</string>
+    <string name="explorer_db_masters">Masters</string>
+    <string name="explorer_db_lichess">Lichess</string>
+    <string name="explorer_db_player">Player</string>
+    <string name="explorer_hdr_move">Move</string>
+    <string name="explorer_hdr_games">Games</string>
+    <string name="explorer_hdr_wdb">White / Draw / Black</string>
+    <string name="invalid_connection_file">Invalid connection file</string>
+    <string name="engines_imported">%d engine(s) imported</string>
+    <string name="import_failed">Failed to import connection file</string>
+    <string name="connecting_via_lan">Connecting via LAN</string>
+    <string name="connecting_via_upnp">Connecting via UPnP</string>
+    <string name="connecting_via_relay">Connecting via relay</string>
+    <string name="connecting_via_mdns">Connecting via mDNS discovery</string>
+    <string name="engine_not_available">Engine not available on server: %s</string>
+    <string name="fetch_engines">Fetch Engines</string>
+    <string name="select_server_engine">Select Server Engine</string>
+    <string name="server_engine_selected">Server engine: %s</string>
+    <string name="no_engine_selection">Server does not support engine selection</string>
+    <string-array name="lichess_explorer_db_values">
+        <item>masters</item>
+        <item>lichess</item>
+        <item>player</item>
+    </string-array>
+    <string-array name="lichess_explorer_db_texts">
+        <item>Masters (OTB 2200+ FIDE)</item>
+        <item>Lichess (online games)</item>
+        <item>Player (personal repertoire)</item>
+    </string-array>
+
+    <string name="rodent_personality_info_title">Personality Guide</string>
+    <string name="rodent_personality_guide">\nBasic \u2014 Default balanced play. All parameters at standard values.\n\nAmanda \u2014 Aggressive attacker with high mobility. Prioritizes own attack (150) and mobility (125) over defense.\n\nAmpere \u2014 Strong attacker (160) who values pawn structure. Good at creating and exploiting pawn weaknesses.\n\nCloe \u2014 Positional player who likes closed positions. Reduced mobility emphasis, strong pawn chain play.\n\nDeborah \u2014 Defensive style, prefers bishops. Lower attack initiative (85) but strong counter-play (115).\n\nDefender \u2014 Solid and slightly materialistic (105). Focuses on opponent\'s attack (110) rather than own initiative.\n\nGrumpy \u2014 Aggressive (120 attack) with contempt. Likes blocked positions and restraining the opponent.\n\nMorphy \u2014 Romantic sacrificial style. Low material weight (78), high attack (135) and mobility (100). Inspired by Paul Morphy.\n\nNimzowitsch \u2014 Positional restraint and blockade. Lower priority on opponent threats (90), emphasis on outposts. Inspired by Aron Nimzowitsch.\n\nPartisan \u2014 Extreme attacker (200) with stealthy openings. Very aggressive but uses quiet opening books.\n\nPawnsacker \u2014 Willing to sacrifice pawns. Low material weight (90), balanced attack and defense.\n\nPedrita \u2014 Pawn-focused and defensive. Strong counter-attack awareness (120), values pawn structure highly.\n\nPreston \u2014 Materialistic moderate attacker. Slightly elevated material (110) and attack (105) weights.\n\nSimple \u2014 Simplified evaluation with Fruit-style piece tables. Some advanced features disabled for cleaner play.\n\nSpitfire \u2014 Balanced with strong counter-attack focus. Standard attack but elevated opponent-attack awareness (150).\n\nStrangler \u2014 Extreme aggression (300 attack). Sacrifices material for crushing attacks. Adapted from Rodent III.\n\nTal \u2014 Ultra-aggressive (450 attack). Maximum sacrificial style. Named after Mikhail Tal, the \"Magician from Riga\".\n</string>
 </resources>

@@ -55,6 +55,7 @@ public interface GUIInterface {
         public String pvStr;
         public String statStr;
         public String bookInfo;
+        public String explorerInfo;
         public ArrayList<ArrayList<Move>> pvMoves;
         public ArrayList<Move> bookMoves;
         public String eco;

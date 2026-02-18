@@ -33,9 +33,11 @@ import org.petero.droidfish.gamelogic.TextIO;
 import org.petero.droidfish.gamelogic.UndoInfo;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 @SuppressLint("UseSparseArrays")
 final class InternalBook implements IOpeningBook {
+    private static final String TAG = "InternalBook";
     private static HashMap<Long, ArrayList<BookEntry>> bookMap;
     private static int numBookMoves = -1;
     private boolean enabled = false;
@@ -112,9 +114,10 @@ final class InternalBook implements IOpeningBook {
                 }
             }
         } catch (ChessParseError ex) {
-            throw new RuntimeException();
+            Log.w(TAG, "Failed to parse internal opening book");
         } catch (IOException ex) {
-            throw new RuntimeException("Can't read internal opening book");
+            Log.w(TAG, "Internal opening book not found (book.bin missing). " +
+                       "Using engine's own opening play instead.");
         }
 /*        {
             long t1 = System.currentTimeMillis();

@@ -218,7 +218,6 @@
     <string name="slash_not_allowed">字符 / 不允许</string>
     <string name="engine_error">引擎错误</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">选择引擎</string>
     <string name="engine_options">引擎选项</string>
     <string name="set_engine_options">设置选项</string>
@@ -237,7 +236,6 @@
     <string name="network_engine_config_error">网络引擎配置错误</string>
     <string name="invalid_network_port">网络端口无效</string>
     <string name="start_new_game">开始新对局?</string>
-    <string name="strength_cuckoo_hint">使用 CuckooChess 引擎可以削弱棋力</string>
     <string name="piece_names">P N B R Q K</string>
     <string name="highlight_last_move_title">突出显示最后一步棋</string>
     <string name="highlight_last_move_summary">用矩形标示走最后一步的棋子</string>
@@ -389,7 +387,7 @@
     <string name="prefs_bookTournamentMode_summary">忽略着法标记为不的锦标赛对弈</string>
     <string name="prefs_bookRandom_title">开局书随机性</string>
     <string name="prefs_bookFile_title">开局书文件名</string>
-    <string name="prefs_bookFile_summary">Polyglot 或 CTG 开局书文件在 SD 卡的 DroidFish/book 目录中</string>
+    <string name="prefs_bookFile_summary">Polyglot、ABK 或 CTG 开局书文件在 SD 卡的 DroidFish/book 目录中</string>
     <string name="prefs_pgnSettings_title">PGN 设置</string>
     <string name="prefs_pgnSettings_summary">设置导入和导出可移植式棋局记录 (PGN) 数据</string>
     <string name="prefs_pgn_viewer">PGN 查看器</string>

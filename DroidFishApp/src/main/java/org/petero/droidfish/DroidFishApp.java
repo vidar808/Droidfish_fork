@@ -26,17 +26,67 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
+import android.os.Environment;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Locale;
 
 public class DroidFishApp extends Application {
+    private static final String TAG = "DroidFishApp";
     private static Context appContext;
     private static Toast toast;
 
     public DroidFishApp() {
         super();
         appContext = this;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        final Thread.UncaughtExceptionHandler defaultHandler =
+            Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            try {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                pw.println("=== CRASH REPORT ===");
+                pw.println("Time: " + new java.util.Date());
+                pw.println("Thread: " + thread.getName());
+                pw.println("Android SDK: " + Build.VERSION.SDK_INT);
+                throwable.printStackTrace(pw);
+                pw.println();
+                String trace = sw.toString();
+                Log.e(TAG, "FATAL CRASH:\n" + trace);
+                boolean written = false;
+                try {
+                    File extDir = new File(Environment.getExternalStorageDirectory(), "DroidFish");
+                    if (extDir.exists() || extDir.mkdirs()) {
+                        File crashFile = new File(extDir, "crash_log.txt");
+                        FileWriter fw = new FileWriter(crashFile, true);
+                        fw.write(trace);
+                        fw.close();
+                        written = true;
+                    }
+                } catch (Exception ignore) {
+                }
+                if (!written) {
+                    File crashFile = new File(getFilesDir(), "crash_log.txt");
+                    FileWriter fw = new FileWriter(crashFile, true);
+                    fw.write(trace);
+                    fw.close();
+                }
+            } catch (Exception ignore) {
+            }
+            if (defaultHandler != null)
+                defaultHandler.uncaughtException(thread, throwable);
+        });
     }
 
     /** Get the application context. */

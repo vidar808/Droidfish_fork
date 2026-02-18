@@ -19,6 +19,7 @@
 package org.petero.droidfish.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -228,6 +229,16 @@ public class EditOptions extends Activity {
 
                 public void onNothingSelected(AdapterView<?> arg0) { }
             });
+            if ("PersonalityFile".equals(o.name)) {
+                holder.eoInfo.setVisibility(View.VISIBLE);
+                holder.eoInfo.setOnClickListener(v -> {
+                    new AlertDialog.Builder(EditOptions.this)
+                        .setTitle(R.string.rodent_personality_info_title)
+                        .setMessage(R.string.rodent_personality_guide)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                });
+            }
             return holder.getRoot();
         }
         case BUTTON: {

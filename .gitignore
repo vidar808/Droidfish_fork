@@ -14,3 +14,6 @@
 .externalNativeBuild
 /release
 *~
+
+# Pre-built engine binaries (built from source during Gradle build)
+DroidFishApp/src/main/jniLibs/

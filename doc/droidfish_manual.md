@@ -1,0 +1,668 @@
+# DroidFish Chess User Manual
+
+## Contents
+
+1. [Introduction](#1-introduction)
+2. [Using the user interface](#2-using-the-user-interface)
+3. [Permissions](#3-permissions)
+4. [Default buttons](#4-default-buttons)
+5. [Game mode](#5-game-mode)
+6. [Playing strength](#6-playing-strength)
+7. [The move list text area](#7-the-move-list-text-area)
+8. [Hints about the current position](#8-hints-about-the-current-position)
+   - 8.1 [Engine analysis](#81-engine-analysis)
+     - 8.1.1 [Add Analysis](#811-add-analysis)
+     - 8.1.2 [Number of Variations](#812-number-of-variations)
+     - 8.1.3 [Show whole variations / Truncate variations](#813-show-whole-variations--truncate-variations)
+     - 8.1.4 [Hide statistics / Show statistics](#814-hide-statistics--show-statistics)
+   - 8.2 [Opening book moves](#82-opening-book-moves)
+   - 8.3 [Opening name (ECO codes)](#83-opening-name-eco-codes)
+   - 8.4 [Arrows](#84-arrows)
+   - 8.5 [Endgame tablebase information](#85-endgame-tablebase-information)
+9. [Claim/Offer/Accept Draw](#9-claimofferaccept-draw)
+10. [Saving and loading games and positions](#10-saving-and-loading-games-and-positions)
+    - 10.1 [PGN](#101-pgn)
+    - 10.2 [FEN/EPD](#102-fenepd)
+    - 10.3 [Autosave](#103-autosave)
+    - 10.4 [OI File Manager](#104-oi-file-manager)
+    - 10.5 [Character encoding](#105-character-encoding)
+    - 10.6 [Setting up a position](#106-setting-up-a-position)
+11. [Opening books](#11-opening-books)
+    - 11.1 [Pre-installed books](#111-pre-installed-books)
+    - 11.2 [Installing additional opening books](#112-installing-additional-opening-books)
+12. [UCI engines](#12-uci-engines)
+    - 12.1 [Open exchange engines](#121-open-exchange-engines)
+    - 12.2 [Changing UCI options](#122-changing-uci-options)
+    - 12.3 [Using a remote engine server](#123-using-a-remote-engine-server)
+    - 12.4 [Network engine discovery](#124-network-engine-discovery)
+13. [Endgame tablebases](#13-endgame-tablebases)
+    - 13.1 [Syzygy](#131-syzygy)
+    - 13.2 [Gaviota](#132-gaviota)
+    - 13.3 [Tablebases for remote engines](#133-tablebases-for-remote-engines)
+14. [Interfacing with other apps](#14-interfacing-with-other-apps)
+    - 14.1 [Sharing games and positions](#141-sharing-games-and-positions)
+    - 14.2 [Scid on the go](#142-scid-on-the-go)
+    - 14.3 [ChessOcr](#143-chessocr)
+15. [Settings](#15-settings)
+    - 15.1 [Time control](#151-time-control)
+    - 15.2 [Hash table size](#152-hash-table-size)
+    - 15.3 [Text size](#153-text-size)
+    - 15.4 [Piece names](#154-piece-names)
+    - 15.5 [Piece set](#155-piece-set)
+    - 15.6 [Move announcement](#156-move-announcement)
+    - 15.7 [Button configuration](#157-button-configuration)
+    - 15.8 [Opening book settings](#158-opening-book-settings)
+
+---
+
+## 1. Introduction
+
+*DroidFish* is a feature-rich graphical chess user interface, combined with the very strong *Stockfish 18* chess engine.
+
+*DroidFish* is primarily designed for engine analysis of chess positions and viewing and editing of chess games. It can also be used for playing games, either against a chess engine or against another human player. Both players must play on the same device though. Remote engine play is also supported via a network engine server.
+
+Additional engines *Rodent IV* and *Patricia* are also bundled, providing different playing styles. Rodent IV has an adjustable personality system with many playing styles, and Patricia is a strong neural network engine.
+
+---
+
+## 2. Using the user interface
+
+- Many common actions are invoked by tapping on user interface elements such as buttons, chess pieces and text.
+
+- A context menu can often be opened by long pressing (tap and hold) on an element such as the chess board, the move list text area or a button.
+
+- The *Left drawer menu* contains command actions and is opened by swiping from the left side of the screen towards the middle. The *right drawer menu* contains less common actions and is opened by swiping from the right side of the screen towards the middle.
+  It is also possible to open the left/right drawer menu by tapping on the left/right half of the app title bar.
+
+- To play a move on the board first tap the piece to move, then tap the destination square. Alternatively, touch the piece to move, drag it to the destination square and release the piece. For pawn promotion moves a context menu is opened that lets the user select the piece to promote to. For castling moves, first tap on the king and then tap on the king destination square. The rook is moved automatically.
+
+**Note!** Castling is only allowed if the king and rook have not previously been moved. When setting up a position manually (see below), make sure to also set the castling right flags appropriately.
+
+---
+
+## 3. Permissions
+
+*DroidFish* requests storage permission when it is first started. This permission is used to read/write data in the `DroidFish` directory on the external storage. *DroidFish* does not read/write any file outside of the `DroidFish` directory, except when explicitly requested to save/load a PGN (portable game notation) or FEN/EPD (Forsyth-Edwards notation / extended position description) file in a different directory.
+
+On Android 11 and above, DroidFish requests the *Manage All Files* permission (MANAGE_EXTERNAL_STORAGE) for full file access. On older Android versions, the standard *Storage* permission is used.
+
+The `DroidFish` directory is used to store opening books, PGN files, FEN/EPD files, third party chess engines and tablebase files. It is also used to store some settings, such as UCI parameter values.
+
+It is possible to use *DroidFish* without granting the storage permission, but functionality will be rather limited.
+
+---
+
+## 4. Default buttons
+
+By default the following buttons are displayed next to the chess board, from left to right:
+
+- The folder button (Custom Button 3). This button opens the last used file to let you select a PGN game or a FEN/EPD position. This button only has an effect if you have previously opened a file.
+
+- The light bulb button (Custom Button 2). This button toggles engine analysis. See the **Game mode** section below for details.
+
+- The rotate board button (Custom Button 1). This button rotates the chess board 180 degrees.
+
+- The game mode button. See the **Game mode** section below for details.
+
+- The left arrow button. This button moves to an earlier position in the game. See the note in the **Game mode** section below for details.
+
+- The right arrow button. This button moves to a later position in the game. See the note in the **Game mode** section below for details.
+
+Tap and hold a button to display a menu with additional actions.
+
+See the **Button configuration** section below for information about how to configure button actions.
+
+---
+
+## 5. Game mode
+
+Change the *game mode* by tapping the `M` button. There are three types of game modes:
+
+1. To view and/or edit a game, use the *Edit/re-play Game* game mode. In this mode there are no chess clocks and no chess engine that will make moves for any side.
+
+2. To make the chess engine analyze the position on the chess board, use the *Analysis mode* game mode. In this mode the engine will continuously analyze the current position. During analysis it is possible to step back/forward in the game and/or add/remove moves to explore possible variations. All moves played on the board are automatically added to the game tree.
+
+3. To play games, use one of the modes *Play white*, *Play black*, *Two players*, *Computer vs computer*. In these modes chess clocks are used and when a computer engine is playing it will limit its thinking time to respect the time available on the clock.
+
+A *Quick Play* dialog is also available for one-tap game setup. It provides an ELO strength slider (1320-3190), time control presets (Bullet 1m, Blitz 3m/5m, Rapid 10m/15+10, Classical 30m, No limit), and color selection. Access it via the Mode button.
+
+**Note!** When the left/right arrow buttons are used to move back/forward in a game, the position will move one or two half-moves depending on the game mode and current position. If a human player is playing against a computer player, the buttons will move to the next/previous position where it is the human's turn to make a move. To make the buttons move only one half-move, change the game mode to *Edit/re-play game* or *analysis mode*.
+
+**Hint!** Since enabling and disabling analysis mode can be a very common operation while analyzing a game, there is a special button (the one with the light bulb image) that toggles analysis mode. When analysis mode is disabled the game mode that was used before analysis mode was enabled is restored.
+
+---
+
+## 6. Playing strength
+
+For engines that can reduce their playing strength using the UCI_LimitStrength and UCI_Elo options, it is possible to specify the engine playing strength by opening the *Left drawer menu* and selecting *Set Engine Strength*.
+
+Stockfish 18, Rodent IV, and Patricia support strength limiting via the UCI_LimitStrength and UCI_Elo options. Rodent IV is particularly suited for weaker play as it offers personality profiles that simulate different playing styles.
+
+The available Elo range can be different for different engines. Stockfish 18 supports a range of 1320-3190 Elo.
+
+The selected playing strength is shown in the title bar after the engine name.
+
+Playing strength changes take effect the next time the engine starts to think about a move.
+
+The playing strength setting is only used in game playing mode. When the engine is in analysis mode, full strength is always used.
+
+---
+
+## 7. The move list text area
+
+The move list keeps a record of moves played during a game and during analysis. Tap on a move in the move list to move to the corresponding point in the game.
+
+The behavior of the move list can be configured in several ways by settings available in *Left drawer menu -> Settings -> Other -> PGN Settings*. You can specify if variations, comments and annotations should be used when viewing, importing and exporting PGN data.
+
+By default the move list is automatically scrolled to make the current move visible at the top of the move list text area. To disable this behavior change the setting *Left drawer menu -> Settings -> Behavior -> Auto scroll move list*.
+
+If you do not want any variations to be used while playing or analyzing a game, enable the setting *Left drawer menu -> Settings -> Behavior -> Discard variations*.
+
+**Note!** In this mode any move played on the board immediately becomes the mainline and the previously played move (if different from the just played move) and all following moves and variations are immediately removed from the game tree.
+
+Tap and hold the move text area to open a menu with the following actions:
+
+- *Edit Headers*: Opens a dialog where the standard PGN headers can be edited.
+
+- *Edit comments*: Opens a dialog where comments and annotations for the current move can be edited. The following fields are available:
+
+    - *Before*: Edit the comment before the current move.
+    - *After*: Edit the comment after the current move.
+    - *Move*: The move itself cannot be edited but the annotation for the move can be edited. Valid annotations are:
+        - `!` : Good move
+        - `?` : Poor move
+        - `!!` : Very good move
+        - `??` : Very poor move
+        - `!?` : Speculative move
+        - `?!` : Questionable move
+        - `=` : Equal chances, quiet position
+        - `~` : Unclear position
+        - `+/=` : White has a slight advantage
+        - `=/+` : Black has a slight advantage
+        - `+/-` : White has a moderate advantage
+        - `-/+` : Black has a moderate advantage
+        - `+-` : White has a decisive advantage
+        - `-+` : Black has a decisive advantage
+
+- *Add opening name*: Adds or updates the `ECO` and `Opening` PGN headers based on information from the ECO (Encyclopedia of Chess Openings) database and the main line in the current game.
+
+- *Truncate Game Tree*: Removes the current move and all following moves and variations from the game tree.
+
+- *Move Variation Up/Down*: Rearrange the order of variations in the game tree. Note that you may have to move a variation up several times to make it become the main line.
+
+- *Add Null Move*: Adds a null move to the game tree. A null move does not move any piece but passes the turn to the other side. Adding a null move can be useful to perform threat analysis.
+  **Note!** A null move is not a legal move in chess.
+
+---
+
+## 8. Hints about the current position
+
+*DroidFish* can display different kinds of hints to improve the user's understanding of the current position on the board.
+
+### 8.1 Engine analysis
+
+When the engine is analyzing a position, information about the current position is displayed at the bottom of the screen. Information is also displayed while the engine is thinking about what move to play in a game, if *Left drawer menu -> Settings -> Hints -> Show Computer Thinking* is enabled.
+
+The first line of information has the following format:
+
+[*depth*] *score* *principal_variation*
+
+- *Depth* is the search depth the engine used when it calculated the score and the principal variation. Search depth is measured in number of half-moves.
+
+- The *score* is a measure of how good the engine thinks the current position is from the white player's point of view. A positive number means white is better and a negative number means black is better.
+
+    The score is either a numerical value, where 1.00 is roughly equal to a one pawn advantage, or a mate score in the form m*value*, where *value* is the number of moves to mate. If black is winning *value* is a negative number.
+
+    In some cases the engine has not calculated an exact score, only an upper or lower bound for the score. In this case the score is prepended with either `<=` or `>=` to show that the score is not exact.
+
+    **Hint!** To instead show scores from the perspective of the side to move, go to *Left Drawer Menu -> Settings -> Hints* and disable *White-based scores*.
+
+- The *principal variation* shows the best game continuation for both sides according to the engine.
+
+The last line of information has the following format:
+
+d:*depth*[/*selDepth*] i:*move* t:*time* n:*nodes* nps:*speed* h:*hashfull* tb:*tbhits*
+
+- *depth* The search depth to which the engine is searching the current move.
+
+- *selDepth* The selective search depth, if reported by the engine.
+
+- *i* is the move number the engine is currently searching. An engine generally starts searching the move it thinks is best, then continues with the second, third, etc best moves until all moves have been searched. Then it starts over with a larger search depth.
+
+- *move* The move the engine is currently searching.
+
+- *time* The amount of time in seconds the engine has been searching in the current position.
+
+- *nodes* The number of nodes the engine has searched for the current position.
+
+- *speed* The search speed measured in number of nodes per second.
+
+- *hashfull* How full the engine hash (transposition) table is. This is displayed as a percentage value between 0 and 100.
+
+- *tbhits* How many successful tablebase lookups the engine has performed for the current position. This is only displayed if the value is larger than 0.
+
+The displayed information can be configured in different ways by long pressing on the analysis text area when it is visible. A context menu appears with the following choices:
+
+#### 8.1.1 Add Analysis
+
+Select *Add Analysis* to add the moves from the principal variation to the current game.
+
+#### 8.1.2 Number of Variations
+
+Select *Number of Variations* to control how many best lines the engine will calculate. By default only the best line of play is calculated. Change this to a larger number to show information about the N best lines of play. This option is not displayed if not supported by the currently used engine.
+
+**Note!** This setting is only used during analysis, not when the engine is playing a game. During game play only the best line of play is calculated to avoid a speed loss that would make the engine play weaker.
+
+#### 8.1.3 Show whole variations / Truncate variations
+
+Select this option to enable or disable the display of the full PV the engine has computed. The default (*Truncate variations*) is to only display the first few moves that fit on a single line on the screen.
+
+#### 8.1.4 Hide statistics / Show statistics
+
+If you are not interested in the last line that displays statistics about the engine (as opposed to the other lines that display information about the chess position), select *Hide statistics* to hide that information.
+
+### 8.2 Opening book moves
+
+If the current board position is included in the currently used opening book, information about all book moves for the position is displayed at the bottom of the screen. Each move is displayed as *move*:*percentage* where *percentage* shows how often the computer player would play that move in games.
+
+Opening book hints can be enabled/disabled from *Left Drawer Menu -> Settings -> Hints -> Show Book Hints*. Note that the chess engine will use the opening book even if opening book hints are disabled.
+
+### 8.3 Opening name (ECO codes)
+
+The setting *Show ECO codes* controls when ECO codes and opening names are displayed. There are three options:
+
+- `Off`: ECO codes and opening names are never displayed.
+- `Auto`: ECO codes and opening names are displayed in the opening phase up to 5 moves after the last move in the ECO database.
+- `Always`: ECO codes and opening names are displayed during the whole game.
+
+### 8.4 Arrows
+
+*DroidFish* sometimes draws arrows on the chess board to give information about the current position.
+
+Go to *Left Drawer Menu -> Settings -> Hints -> Use Arrows* to control how many arrows to display.
+
+Go to *Left Drawer Menu -> Settings -> Appearance -> Color Settings* to change the arrow colors. Note that manually made color changes are overwritten if you set a new color theme using *Left Drawer Menu -> Set Color Theme*.
+
+The arrows have different meanings in different circumstances. The first that applies from the following list defines what the arrows mean:
+
+1. If *DroidFish* is in analysis mode or if it is *DroidFish's* turn to move and *Show Computer Thinking* is enabled, engine search information is displayed. If *Number of Variations* is 1, the first N half-moves from the principal variation is displayed. If *Number of Variations* is larger than 1, the best N moves are displayed. (To change *Number of Variations*, tap and hold on the analysis output area while the engine is thinking.)
+
+2. If *Left Drawer Menu -> Settings -> Hints -> Show Book Hints* is enabled and the current position is included in the opening book, the arrows display the N best moves from the opening book.
+
+3. If there are variations recorded in the current game for the current position, the arrows display the first N variations. Variations appear for example if you undo a move and play a different move instead.
+
+### 8.5 Endgame tablebase information
+
+To change how endgame tablebase hints are displayed, go to *Left drawer menu -> Settings -> Endgame Tablebases* and change *Show Hints* and/or *Edit Board Hints*.
+
+When *Show Hints* is enabled and the position on the board is included in an endgame tablebase, if you tap on a piece, information about all legal moves for that piece is displayed. For each square the piece can move to, the tablebase score is displayed on that square. The score is positive if the side to move has the advantage.
+
+When *Edit Board Hints* is enabled, you are using the board editor to set up a position, and the position is included in an endgame tablebase, if you select a piece on the board, information about alternative positions for that piece is displayed. For each square the piece can be placed on, the tablebase score for the corresponding position is displayed on that square. The score is positive if white has the advantage.
+
+A tablebase probe can produce one of three different types of scores, depending on what tablebase file was probed:
+
+- Distance to mate. This is displayed as +*score* or -*score*, where `+` is used for winning scores and `-` is used for losing scores. The *score* value is the number of moves (not half-moves) to mate. A drawn position is displayed as 0.
+
+    - A Gaviota tablebase probe produces a distance to mate score.
+
+- Distance to zeroing move. This is displayed as W*score* or L*score*, where W is used for winning scores and L is used for losing scores. The *score* value is the number of moves (not half-moves) to the next zeroing move. A drawn position is displayed as 0.
+
+    - A Syzygy `.rtbz` tablebase probe produces a distance to zeroing move score.
+    - A zeroing move is a move that resets the 50-move draw counter, that is a pawn move or a capture.
+
+- Win/draw/loss. This is displayed as `W`, `0` or `L`.
+
+    - A Syzygy `.rtbw` tablebase probe produces a win/draw/loss score.
+
+---
+
+## 9. Claim/Offer/Accept Draw
+
+*DroidFish* does not automatically end a game when the 50-move rule or the 3-fold repetition rule is triggered. According to FIDE (International Chess Federation) rules, these conditions do not automatically end a game, they just allow a player to claim a draw if the player wants to.
+
+To request a draw action, select *Right drawer menu -> Claim/Offer/Accept Draw*. The following happens:
+
+- If the current position allows a draw to be claimed, the game immediately ends with a draw result.
+
+- If the other player offered a draw in the previous move, the draw offer is accepted and the game immediately ends with a draw result.
+
+- Otherwise, play a move on the board as usual.
+
+- If the resulting position allows a draw to be claimed, the game immediately ends with a draw result.
+
+- Otherwise the move is played on the board and a draw offer is given to the opponent. The opponent is free to accept or ignore the offer.
+
+**Note!** It is not possible to offer a draw without also playing a move.
+
+The chess engine never offers a draw, but it can accept a draw offer made by the user and it can claim a draw if allowed by the rules of chess.
+
+**Note!** *DroidFish* does not implement the relatively new 75-move draw rule and 5-fold repetition rule. Those rules are primarily meant to prevent very long games where neither player would want to claim a draw. *DroidFish* does not mind if the players want to play very long games so it does not have to implement these rules.
+
+---
+
+## 10. Saving and loading games and positions
+
+### 10.1 PGN
+
+To load a game from a PGN file, go to *Left drawer menu -> File -> Load game from PGN file*. Select the file to read, then select the game to load from the list of available games.
+
+To save a game to a PGN file, go to *Left drawer menu -> File -> Save game to PGN file*. Select the file to save to. If the file is empty, the game is directly saved in the file. If the file is not empty, a list of existing games is displayed. To decide where the current game should be saved in the file, select an existing game from the list. A menu is opened where you can decide if the current game should be saved before, after or replace the selected game.
+
+There is a search field above the game list. If a string is entered in the search field, the game list is filtered to only show games matching the search string. The matching is case insensitive and by default matches a substring in the game list. It is possible to enable matching using Java regular expression syntax by enabling *Regular Expression Search* in the menu.
+
+**Hint!** In the game list, tap and hold a game to delete that game from the PGN file.
+
+**Hint!** To delete the whole file, select *Delete File* from the menu.
+
+### 10.2 FEN/EPD
+
+To load a position from a FEN/EPD file, go to *Left drawer menu -> File -> Load position from file*. Select the file to read, then select the position to load from the list of available positions in the file. A preview of the position is displayed on the small chess board. Click the `OK` button to replace the current game with the selected position. Click the `CANCEL` button or the device back button to return to the current game.
+
+**Hint!** Tap and hold a position in the list to immediately replace the current game with the selected position.
+
+Saving a position to a FEN/EPD file has not been implemented.
+
+### 10.3 Autosave
+
+When an action is performed that causes the current game to be discarded, the game is automatically saved in the file `DroidFish/pgn/.autosave.pgn` before being discarded. The autosave file has a maximum size of 20 games and the most recently autosaved game is stored first in the file. If the number of games becomes too large, the oldest stored game is removed from the file.
+
+### 10.4 OI File Manager
+
+If the *OI File Manager* app (or a compatible file manager) is installed *DroidFish* will use the app to select files when loading/saving PGN/FEN/EPD files. This makes it possible to read files in any directory on the device where the user has read access. Removable storage like USB hard disks and SD cards do not typically allow write access from apps using normal file system operations, so *DroidFish* will only be able to read files from such locations.
+
+**Hint!** If the OI File Manager is installed, it can also be used to copy, move and delete existing files when invoked to load/save a PGN/FEN/EPD file.
+
+### 10.5 Character encoding
+
+*DroidFish* assumes that PGN/FEN/EPD files are encoded in UTF-8 format. ASCII is a subset of UTF-8 so that will work too. Other encodings will likely cause at least some characters to be displayed incorrectly.
+
+### 10.6 Setting up a position
+
+To set up a position, open the *Left drawer menu* and select *Edit Board*. A chess board editor is opened where you can move pieces around freely and add/remove pieces. If a piece is selected in the area next to the chess board, click a square on the chess board to change the piece on that square.
+
+- If the square is empty or contains a different piece type, the selected piece is placed on the square.
+
+- If the square contains the selected piece, the same piece but with opposite color is placed on the square.
+
+- If the square contains the selected piece but with opposite color, the square is cleared.
+
+If an empty square is selected in the area next to the chess board, click a square on the chess board to clear that square.
+
+If nothing is selected in the area next to the chess board you can move pieces on the chess board by first clicking on the from square, then clicking on the destination square. This works even if the from square is empty, which has the effect of clearing the destination square.
+
+The board editor has its own *Left drawer menu* where you can change the side to move, castling flags, en passant file and move counters. The menu also contains shortcuts to set up the initial position and to clear the board.
+
+To use the set up position, click the `OK` button or the device back button. This replaces the current game with the set up position. Click the `CANCEL` button to discard the set up position and return to the current game.
+
+**Note!** It is not possible to set up illegal positions since this could potentially cause the chess engine to crash. UCI engines usually assume that they are only asked to analyze legal positions. If the position being edited is illegal, a warning message is displayed. If you click the `OK` button when the position is illegal, the illegal position is discarded and the current game is restored.
+
+---
+
+## 11. Opening books
+
+### 11.1 Pre-installed books
+
+*DroidFish* includes three pre-installed opening books:
+
+1. `<Internal Book>`: This is a small opening book that is also the default book.
+
+2. `<ECO Book>`: This opening book contains all book lines that define the ECO codes.
+
+3. `<No Book>`: This is an empty opening book that can be used when no opening book is wanted.
+
+### 11.2 Installing additional opening books
+
+To use *polyglot*, *CTG* or *ABK* book files:
+
+1. Copy one or more opening book files to the `DroidFish/book` directory on the external storage.
+
+    1. Polyglot books must have the file extension `.bin`.
+       **Note!** The Android file system may be case sensitive, in which case the extension must be `.bin`, not `.Bin` or `.BIN`.
+
+    2. A *CTG* book consists of three files with file extensions `.ctg`, `.ctb` and `.cto`. You must copy all three files.
+
+    3. An *ABK* book must have the file extension `.abk`.
+
+2. Go to *Left drawer menu -> Select opening book*.
+
+3. Select the opening book you want to use.
+
+*Hint!* There are many free opening books available for download from the internet. There is also a free tool called *PolyGlot* that can be used on a PC to create polyglot opening books from a collection of PGN games. How to find and use these resources is outside the scope of this manual.
+
+---
+
+## 12. UCI engines
+
+In addition to the pre-installed chess engines, *DroidFish* can also use third party UCI engines:
+
+- Copy one or more UCI engine binaries to the `DroidFish/uci` directory on the external storage.
+  **Note!** The binaries must be compiled for Android.
+
+- Go to *Left drawer menu -> Manage Chess Engines -> Select Chess Engine* and select the engine to use.
+
+External engines are started with the current working directory set to `DroidFish/uci/logs` on the external storage. This is useful for engines that expect to find data files in a path relative to the current directory.
+
+*Hint!* There are many free chess engines compiled for Android that can be downloaded from the internet. How to find such engines is outside the scope of this document.
+
+### 12.1 Open exchange engines
+
+*DroidFish* supports the *open exchange chess engine interface*, which is a way to package UCI chess engines as Android apps. If you install such an app the engine will automatically appear in the list of available engines in *DroidFish*.
+
+### 12.2 Changing UCI options
+
+To change options for the current chess engine, go to *Left drawer menu -> Manage chess engines -> Set options*. (Alternatively, tap and hold the light bulb button and select *Engine options*.) This opens an editor where UCI options defined by the chess engine can be edited. What options are available and what they do depend on the chess engine. Refer to the chess engine documentation for details.
+
+Click `OK` to send the modified option values and selected button options to the engine. If the engine is not thinking the options will be applied immediately. Otherwise the options will be applied when the engine stops thinking or starts thinking about a new position.
+
+Engine settings are saved, so the next time you use the same chess engine it will use the settings you saved the last time it was used. To restore default settings, open the UCI options editor and click `RESET` and `OK`.
+
+### 12.3 Using a remote engine server
+
+*DroidFish* can connect to remote UCI engines via the Chess-UCI-Server, a Python-based server with security and management features.
+
+**Connection methods:**
+
+- **Manual entry**: *Left drawer menu -> Manage Chess Engines -> New Network Engine*. Enter hostname/IP, port, TLS toggle, and optional auth token.
+- **QR Code scanning**: Tap "Scan QR" to scan a QR code generated by the server for instant setup.
+- **mDNS auto-discovery**: Tap "Discover" to find servers on the local network automatically.
+- **Connection file import**: Tap "Import Connection File" to load a `.chessuci` file generated by the server.
+
+**Security features:**
+
+- Optional TLS encryption for all network traffic
+- Token-based or PSK authentication
+- Reconnection with exponential backoff (up to 5 attempts, 1s-30s delay)
+
+**Single-port mode**: When the server is configured for single-port mode, DroidFish can select from multiple engines available on the same port. The "Fetch Engines" button in the config dialog retrieves the list of available engines.
+
+**Engine configuration** is stored as a 14-line NETE file containing: name, host, port, TLS flag, auth token, certificate fingerprint, auth method, PSK, relay host, relay port, relay session, external host, mDNS name, and selected engine.
+
+**Note!** With TLS and authentication enabled, remote engine connections are secure for use over the internet.
+
+### 12.4 Network engine discovery
+
+*DroidFish* provides several methods to discover and connect to remote Chess-UCI-Server instances without manual configuration:
+
+**QR Code scanning**
+
+The Chess-UCI-Server can generate a QR code containing connection details as a JSON payload. To use this feature:
+
+1. On the server, run the pairing command to generate a QR code (displayed on screen or saved as an image).
+2. In DroidFish, go to *Left drawer menu -> Manage Chess Engines -> New Network Engine*.
+3. Tap the "Scan QR" button.
+4. Point the device camera at the QR code.
+5. DroidFish automatically parses the JSON payload (host, port, engines, TLS, token) and creates a network engine configuration.
+
+The QR code payload includes all information needed for a secure connection, including TLS settings and authentication tokens.
+
+**mDNS auto-discovery**
+
+The Chess-UCI-Server advertises itself on the local network using the `_chess-uci._tcp` mDNS service type. To discover servers:
+
+1. In DroidFish, go to *Left drawer menu -> Manage Chess Engines -> New Network Engine*.
+2. Tap the "Discover" button.
+3. DroidFish performs a 3-second scan of the local network using Android's NsdManager.
+4. Found servers are presented in a selection dialog showing server names and addresses.
+5. Select a server to auto-fill the connection details, including host, port, TLS flag, and authentication properties extracted from the service TXT records.
+
+**Connection file import**
+
+The Chess-UCI-Server's `--pair` mode generates `.chessuci` connection files that can be shared and imported:
+
+1. Transfer the `.chessuci` file to the Android device (via email, file sharing, USB, etc.).
+2. In DroidFish, go to *Left drawer menu -> Manage Chess Engines -> New Network Engine*.
+3. Tap the "Import Connection File" button.
+4. Use the Android file picker to select the `.chessuci` file.
+5. DroidFish creates NETE configuration profiles for each engine listed in the file.
+
+The file extension is validated before import. The connection file can contain single-port mode settings, multiple engine definitions, and full security configuration.
+
+**Fetch Engines button**
+
+When connected to a server in single-port mode, the "Fetch Engines" button in the network engine configuration dialog communicates with the server using the `ENGINE_LIST` / `SELECT_ENGINE` protocol to retrieve the list of available engines. This allows selecting a specific engine from the multiple engines the server offers on a single port.
+
+---
+
+## 13. Endgame tablebases
+
+### 13.1 Syzygy
+
+*DroidFish* can use Syzygy endgame tablebases, which can be downloaded for free from the internet. To use Syzygy tablebases:
+
+- Copy `.rtbw` and optionally `.rtbz` files to the `DroidFish/rtb` directory on the external storage.
+
+- Change settings in *Left drawer menu -> Settings -> Endgame Tablebases* to control how the tablebases are used.
+
+Tablebases containing up to 7 men are supported, although it is probably impractical to use larger than 5-men tablebases for handheld devices because of the very large size of 6-men and 7-men tablebases.
+
+### 13.2 Gaviota
+
+*DroidFish* can use Gaviota endgame tablebases, which can be downloaded for free from the internet. To use Gaviota tablebases:
+
+- Copy `.gtb.cp4` files to the `DroidFish/gtb` directory on the external storage.
+
+- Change settings in *Left drawer menu -> Settings -> Endgame Tablebases* to control how the tablebases are used.
+
+### 13.3 Tablebases for remote engines
+
+To configure tablebases for remote engines, go to *Left drawer menu -> Settings -> Endgame Tablebases* and change *GTB Network Directory* and *Syzygy Network Directory* to match the paths where the tablebases are installed on the remote computer.
+
+---
+
+## 14. Interfacing with other apps
+
+### 14.1 Sharing games and positions
+
+To share the current game, tap and hold the chess board and select *Share game* or *Share as Text* from the menu. This brings up a list of applications that can import the game data. Use *Share game* to send the PGN data to another chess app. Use *Share as Text* to send the PGN data as text to a non-chess app, such as an email app.
+
+To share the current position as a PNG image, tap and hold the chess board and select *Share as Image*.
+
+It is also possible to import/export PGN and FEN/EPD data from/to the clipboard. Tap and hold the chess board and select *Clipboard* to use this function. The *Paste from Clipboard* function automatically detects both PGN and FEN/EPD data.
+
+*DroidFish* will also appear in the list of target apps when you share chess data from other chess apps installed on the device.
+
+### 14.2 Scid on the go
+
+If the *Scid on the go* app is installed *DroidFish* can directly open games from Scid database files. To use this function, tap and hold the chess board, select *File* from the menu, then select *Load game from Scid file*. Select the desired file, then select the game to load from the file.
+
+**Hint!** If you later want to load a different game from the same Scid file, use the *folder button* to go directly to the game list for the last used file.
+
+### 14.3 ChessOcr
+
+If the *ChessOcr* app is installed *DroidFish* can use that app to scan chess positions from magazines or books and automatically set up the scanned position in *DroidFish*. To use this function, tap and hold the chess board and select *Retrieve Position* from the menu. Select the ChessOcr app and follow the instructions in that app.
+
+If the scanned position is valid it is set as the current board position in *DroidFish*. If the scanned position is invalid, *DroidFish* enters edit board mode with the invalid position. Correct the position to make it valid and click the `OK` button to use the position.
+
+---
+
+## 15. Settings
+
+*DroidFish* has a large number of configurable settings, which can be changed by opening the *Left drawer menu* and selecting *Settings*. Some important settings not already explained are described in the following sections.
+
+### 15.1 Time control
+
+It is possible to specify the time control as the number of moves to be played in a given amount of time. Additionally it is possible to specify a time increment that is added to each player's clock after making a move.
+
+Engine players try their best to respect the specified time control settings, but if you are using a very fast time control on a slow device, it is possible that the engine runs out of time. When the engine has no time left on its clock it will play as fast as it can. This can cause some engines to play very weakly, so it is best to use a slower time control if this happens on your device.
+
+The time control is also used for human players, but note that the game does not automatically end if a player runs out of time. It is up to the user to decide what to do if a player runs out of time.
+
+Time control changes take effect when a new game is started.
+
+### 15.2 Hash table size
+
+Use *Left drawer menu -> Settings -> Engine Settings -> Hash Table* to change the hash table size used by the chess engine.
+
+In Android there is a limit for the maximum amount of Java memory an app is allowed to use. The limit depends on the device and possibly also on the Android version the device is running. *DroidFish* will not allow a chess engine to use a larger hash table than this limit. This restriction is enforced because Android is not designed to run processes requesting a lot of memory, and can become unstable or crash or reboot if it runs out of memory.
+
+It is possible to disable this hash table size limit by creating a file called `.unsafehash` in the directory `DroidFish/uci`. This feature should only be used if you have determined that it does not cause your device to become unstable.
+
+**Note!** The hash table size limit is only enforced for engines running on the device. Network engines are not affected.
+
+### 15.3 Text size
+
+The text size used to display moves and analysis information can be changed in *Settings -> Appearance -> Text Size*.
+
+### 15.4 Piece names
+
+Use the *Piece Names* setting in the *Appearance* section to control how pieces are represented in the move list and analysis information. There are three available choices:
+
+- English letters. The following letters are used:
+    - `P` : Pawn
+    - `N` : Knight
+    - `B` : Bishop
+    - `R` : Rook
+    - `Q` : Queen
+    - `K` : King
+
+- Local language letters. The letters used depend on the current user interface language.
+
+- Figurine notation. Small images are used instead of piece letters.
+
+**Note!** The PGN standard says English letters should be used for identifying piece names, so English letters are always used/assumed during PGN export/import.
+
+### 15.5 Piece set
+
+You can change the appearance of the chess pieces on the chess board using the *Piece Names* option in the *Appearance* section. It is also possible to change piece colors in *Color Settings* in the *Appearance* section. Note however that piece colors are overwritten if you change the color theme using *Left drawer menu -> Set Color Theme*.
+
+### 15.6 Move announcement
+
+Use *Left drawer menu -> Settings -> Appearance -> Speak moves* to control how played moves are announced. The following settings are available:
+
+- *Off*: Moves are not announced.
+
+- *Speech*: When a move is played by either a human or the computer, the played move is spoken using short algebraic notation. English, German and Spanish speech is available.
+
+Enable *Settings -> Appearance -> Move sound* to play a sound when the computer player makes a move.
+
+Use *Settings -> Appearance -> Enable Vibration* to make the device vibrate when the computer player makes a move.
+
+### 15.7 Button configuration
+
+Button actions can be changed from *Left drawer menu -> Settings -> Behavior -> Configure Buttons*.
+
+The three leftmost buttons can be changed by the user. Each button has a main action that is triggered when the button is tapped. The main action also determines the icon used to display the button. Additionally up to 6 extra actions can be defined for a button. To invoke the additional actions, tap and hold the button, then select the desired action from the menu that opens.
+
+If all actions for a button are disabled the button is not displayed. Note that in *settings* the buttons are named *Custom Button 1/2/3*, where button 3 is the leftmost button.
+
+The three rightmost buttons (the `M` button and the left/right arrow buttons) have predefined actions that cannot be changed by the user.
+
+### 15.8 Opening book settings
+
+You can change aspects of the opening book from *Left drawer menu -> Settings -> Other -> Opening Book Settings*. The following settings are available:
+
+- *Book Length*: Controls the maximum number of moves the engine will play from the opening book. This setting does not affect opening book hints. The default is *unlimited*.
+
+- *Prefer main lines*: When enabled, moves that are marked as main line moves in the book are given a higher weight so they will be played more often by the chess engine.
+  **Note!** This option only has an effect for *CTG* opening books.
+
+- *Tournament mode*: When enabled, only book moves that are marked for tournament play are played by the chess engine.
+  **Note!** This option only has an effect for *CTG* opening books.
+
+- *Book randomization*: Controls how often different book moves are played by the engine. The default is 50% which means that the statistics from the opening book is used unmodified. 100% means that all book moves are played with (almost) the same probability regardless of the statistics from the opening book. 0% means that the book move with the best statistics is played (almost) 100% of the time.
+
+- *Book Filename*: This option is set automatically when *Left drawer menu -> Select Opening Book* is used. It is however possible to set this value manually in which case the full path to an opening book file should be specified (including the file extension). This can be useful if you have a very big opening book stored somewhere on the device but it would be impractical to copy it to the `DroidFish/book` directory.
+
+**Note!** The move percentages calculated by *DroidFish* for *CTG* books are unlikely to agree with percentages calculated by other chess programs that can use *CTG* books.
+
+**Note!** The move percentages calculated by *DroidFish* for *ABK* books are not always equal to percentages shown in the Arena Chess GUI, because the algorithm used by Arena to compute the percentages is unknown.

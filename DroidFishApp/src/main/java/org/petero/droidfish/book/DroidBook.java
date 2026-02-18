@@ -55,6 +55,7 @@ public final class DroidBook {
     private IOpeningBook ecoBook = new EcoBook();
     private IOpeningBook internalBook = new InternalBook();
     private IOpeningBook noBook = new NoBook();
+    private LichessExplorerBook lichessBook = new LichessExplorerBook();
     private BookOptions options = null;
 
     private static final DroidBook INSTANCE = new DroidBook();
@@ -82,6 +83,7 @@ public final class DroidBook {
         ecoBook.setOptions(options);
         internalBook.setOptions(options);
         noBook.setOptions(options);
+        lichessBook.setOptions(options);
     }
 
     /** Return a random book move for a position, or null if out of book. */
@@ -89,7 +91,14 @@ public final class DroidBook {
         Position pos = posInput.getCurrPos();
         if ((options != null) && (pos.fullMoveCounter > options.maxLength))
             return null;
-        List<BookEntry> bookMoves = getBook().getBookEntries(posInput);
+        List<BookEntry> bookMoves = null;
+        if (lichessBook.enabled()) {
+            bookMoves = lichessBook.getBookEntriesBlocking(posInput, 5000);
+            if (bookMoves == null || bookMoves.isEmpty())
+                bookMoves = getLocalBook().getBookEntries(posInput);
+        } else {
+            bookMoves = getBook().getBookEntries(posInput);
+        }
         if (bookMoves == null || bookMoves.isEmpty())
             return null;
 
@@ -180,6 +189,21 @@ public final class DroidBook {
     }
 
     private IOpeningBook getBook() {
+        if (lichessBook.enabled()) {
+            return lichessBook;
+        } else if (externalBook.enabled()) {
+            return externalBook;
+        } else if (ecoBook.enabled()) {
+            return ecoBook;
+        } else if (noBook.enabled()) {
+            return noBook;
+        } else {
+            return internalBook;
+        }
+    }
+
+    /** Return the first enabled non-Lichess book (for fallback). */
+    private IOpeningBook getLocalBook() {
         if (externalBook.enabled()) {
             return externalBook;
         } else if (ecoBook.enabled()) {
@@ -189,5 +213,20 @@ public final class DroidBook {
         } else {
             return internalBook;
         }
+    }
+
+    /** Get rich HTML explorer info for the given position, or empty string. */
+    public String getExplorerInfo(Position pos) {
+        return lichessBook.getExplorerInfoHtml(pos);
+    }
+
+    /** Set callback invoked when async explorer data arrives. */
+    public void setOnExplorerDataReady(Runnable callback) {
+        lichessBook.setOnDataReady(callback);
+    }
+
+    /** Shut down the explorer background thread. */
+    public void shutdownExplorer() {
+        lichessBook.shutdown();
     }
 }

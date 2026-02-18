@@ -559,6 +559,28 @@
             android:key="bookSettings"
             android:title="@string/prefs_bookSettings_title"
             android:summary="@string/prefs_bookSettings_summary">
+            <CheckBoxPreference
+                android:key="lichessExplorer"
+                android:title="@string/prefs_lichessExplorer_title"
+                android:summary="@string/prefs_lichessExplorer_summary"
+                android:defaultValue="true">
+            </CheckBoxPreference>
+            <EditTextPreference
+                android:key="lichessPlayerName"
+                android:title="@string/prefs_lichessPlayerName_title"
+                android:summary="@string/prefs_lichessPlayerName_summary"
+                android:defaultValue=""
+                android:dependency="lichessExplorer">
+            </EditTextPreference>
+            <ListPreference
+                android:key="lichessExplorerDb"
+                android:title="@string/prefs_lichessExplorerDb_title"
+                android:summary="@string/prefs_lichessExplorerDb_summary"
+                android:entryValues="@array/lichess_explorer_db_values"
+                android:entries="@array/lichess_explorer_db_texts"
+                android:defaultValue="masters"
+                android:dependency="lichessExplorer">
+            </ListPreference>
             <ListPreference
                 android:key="bookMaxLength"
                 android:title="@string/prefs_bookMaxLength_title"

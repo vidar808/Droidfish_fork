@@ -218,7 +218,6 @@ Pil gücüyle çalışıyorsanız, pil gücünden tasarruf etmek için ayarları
     <string name="slash_not_allowed">/ karakterine izin verilmiyor</string>
     <string name="engine_error">Motor hatası</string>
     <string name="stockfish_engine">Stockfish</string>
-    <string name="cuckoochess_engine">CuckooChess</string>
     <string name="select_engine">Motoru seç</string>
     <string name="engine_options">Motor Seçenekleri</string>
     <string name="set_engine_options">Seçenekleri ayarla</string>
@@ -237,7 +236,6 @@ Pil gücüyle çalışıyorsanız, pil gücünden tasarruf etmek için ayarları
     <string name="network_engine_config_error">Ağ motoru ayarlama hatası</string>
     <string name="invalid_network_port">Geçersiz ağ portu</string>
     <string name="start_new_game">Yeni oyun başlat</string>
-    <string name="strength_cuckoo_hint">Zayıf olsa bile CuckooChess motorunu kullan.</string>
     <string name="piece_names">P A F K V Ş</string>
     <string name="highlight_last_move_title">Son hareketi vurgula</string>
     <string name="highlight_last_move_summary">Son oynanan kareyi çiz</string>
@@ -389,7 +387,7 @@ Pil gücüyle çalışıyorsanız, pil gücünden tasarruf etmek için ayarları
     <string name="prefs_bookTournamentMode_summary">Turnuva oyununa uymayan hamleleri görmezden gel</string>
     <string name="prefs_bookRandom_title">Kitap Rastgele Seçimi</string>
     <string name="prefs_bookFile_title">Kitap Dosya adı</string>
-    <string name="prefs_bookFile_summary">Sd kartdaki DroidFish dizinindeki Polyglot veya CTG kitap dosyaları</string>
+    <string name="prefs_bookFile_summary">Sd kartdaki DroidFish dizinindeki Polyglot, ABK veya CTG kitap dosyaları</string>
     <string name="prefs_pgnSettings_title">PGN Seçenekleri</string>
     <string name="prefs_pgnSettings_summary">Taşınabilir oyun notasyonu (PGN) verilerini içe ve dışa aktarmak için ayarlar</string>
     <string name="prefs_pgn_viewer">PGN gösterici</string>

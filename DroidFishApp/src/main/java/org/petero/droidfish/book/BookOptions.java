@@ -27,6 +27,10 @@ public final class BookOptions {
     public boolean tournamentMode = false;
     public double random = 0; // Scale probabilities according to p^(exp(-random))
 
+    public boolean lichessExplorerEnabled = true;
+    public String lichessExplorerDb = "masters";  // "masters", "lichess", "player"
+    public String lichessPlayerName = "";
+
     public BookOptions() { }
 
     public BookOptions(BookOptions other) {
@@ -35,6 +39,9 @@ public final class BookOptions {
         preferMainLines = other.preferMainLines;
         tournamentMode = other.tournamentMode;
         random = other.random;
+        lichessExplorerEnabled = other.lichessExplorerEnabled;
+        lichessExplorerDb = other.lichessExplorerDb;
+        lichessPlayerName = other.lichessPlayerName;
     }
 
     @Override
@@ -47,7 +54,10 @@ public final class BookOptions {
                 (maxLength == other.maxLength) &&
                 (preferMainLines == other.preferMainLines) &&
                 (tournamentMode == other.tournamentMode) &&
-                (random == other.random));
+                (random == other.random) &&
+                (lichessExplorerEnabled == other.lichessExplorerEnabled) &&
+                (lichessExplorerDb.equals(other.lichessExplorerDb)) &&
+                (lichessPlayerName.equals(other.lichessPlayerName)));
     }
 
     @Override

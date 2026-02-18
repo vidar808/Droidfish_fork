@@ -37,7 +37,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import org.petero.droidfish.BuildConfig;
 import org.petero.droidfish.activities.CPUWarning;
+import org.petero.droidfish.activities.NetworkEngineConfig;
+import org.petero.droidfish.activities.OpeningExplorerActivity;
+import org.petero.droidfish.activities.QuickPlayDialog;
 import org.petero.droidfish.activities.EditBoard;
 import org.petero.droidfish.activities.EditOptions;
 import org.petero.droidfish.activities.EditPGNLoad;
@@ -48,8 +55,10 @@ import org.petero.droidfish.activities.util.PGNFile;
 import org.petero.droidfish.activities.util.PGNFile.GameInfo;
 import org.petero.droidfish.activities.Preferences;
 import org.petero.droidfish.book.BookOptions;
+import org.petero.droidfish.book.DroidBook;
 import org.petero.droidfish.engine.DroidComputerPlayer.EloData;
 import org.petero.droidfish.engine.EngineUtil;
+import org.petero.droidfish.engine.NetworkDiscovery;
 import org.petero.droidfish.engine.UCIOptions;
 import org.petero.droidfish.gamelogic.DroidChessController;
 import org.petero.droidfish.gamelogic.ChessParseError;
@@ -79,7 +88,7 @@ import com.kalab.chess.enginesupport.ChessEngineResolver;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
@@ -110,9 +119,11 @@ import android.graphics.drawable.StateListDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.StrictMode;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
@@ -137,6 +148,7 @@ import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -150,11 +162,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 @SuppressLint("ClickableViewAccessibility")
-public class DroidFish extends Activity
+public class DroidFish extends AppCompatActivity
                        implements GUIInterface,
                                   ActivityCompat.OnRequestPermissionsResultCallback {
     private ChessBoardPlay cb;
     DroidChessController ctrl = null;
+    private GameViewModel gameViewModel;
     private boolean mShowThinking;
     private boolean mShowStats;
     private boolean fullPVLines;
@@ -517,15 +530,29 @@ public class DroidFish extends Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Show crash log from previous run, if any
+        showCrashLogIfExists();
+
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
 
         String intentPgnOrFen = null;
         String intentFilename = null;
+        boolean isChessUciImport = false;
         if (savedInstanceState == null) {
-            Pair<String,String> pair = getPgnOrFenIntent();
-            intentPgnOrFen = pair.first;
-            intentFilename = pair.second;
+            // Check for .chessuci file import first
+            Uri intentData = getIntent().getData();
+            if (intentData != null) {
+                String path = intentData.getPath();
+                if (path != null && path.toLowerCase(Locale.US).endsWith(".chessuci")) {
+                    isChessUciImport = true;
+                }
+            }
+            if (!isChessUciImport) {
+                Pair<String,String> pair = getPgnOrFenIntent();
+                intentPgnOrFen = pair.first;
+                intentFilename = pair.second;
+            }
         }
 
         createDirectories();
@@ -549,9 +576,16 @@ public class DroidFish extends Activity
 
         gameTextListener = new PgnScreenText(this, pgnOptions);
         moveList.setOnLinkClickListener(gameTextListener);
-        if (ctrl != null)
-            ctrl.shutdownEngine();
-        ctrl = new DroidChessController(this, gameTextListener, pgnOptions);
+
+        gameViewModel = new androidx.lifecycle.ViewModelProvider(this).get(GameViewModel.class);
+        if (gameViewModel.isInitialized() && gameViewModel.getCtrl() != null) {
+            ctrl = gameViewModel.getCtrl();
+        } else {
+            if (ctrl != null)
+                ctrl.shutdownEngine();
+            ctrl = new DroidChessController(this, gameTextListener, pgnOptions);
+            gameViewModel.setCtrl(ctrl);
+        }
         egtbForceReload = true;
         if (speech == null)
             speech = new Speech();
@@ -580,7 +614,9 @@ public class DroidFish extends Activity
         ctrl.setGuiPaused(true);
         ctrl.setGuiPaused(false);
         ctrl.startGame();
-        if (intentPgnOrFen != null) {
+        if (isChessUciImport) {
+            handleChessUciImport(getIntent().getData());
+        } else if (intentPgnOrFen != null) {
             try {
                 ctrl.setFENOrPGN(intentPgnOrFen, true);
                 setBoardFlip(true);
@@ -708,16 +744,65 @@ public class DroidFish extends Activity
         }
     }
 
+    /** Show crash log from a previous run, if one exists. */
+    private void showCrashLogIfExists() {
+        try {
+            java.io.File crashFile = new java.io.File(getFilesDir(), "crash_log.txt");
+            if (crashFile.exists()) {
+                java.io.BufferedReader br = new java.io.BufferedReader(
+                    new java.io.FileReader(crashFile));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                int lines = 0;
+                while ((line = br.readLine()) != null && lines < 40) {
+                    sb.append(line).append('\n');
+                    lines++;
+                }
+                br.close();
+                crashFile.delete();
+                String trace = sb.toString();
+                new AlertDialog.Builder(this)
+                    .setTitle("Previous Crash Report")
+                    .setMessage(trace)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            }
+        } catch (Exception ignore) {
+        }
+    }
+
     /** Create directory structure on SD card. */
+    @SuppressLint("InlinedApi")
     private void createDirectories() {
         if (storagePermission == PermissionState.UNKNOWN) {
-            String extStorage = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-            if (ContextCompat.checkSelfPermission(this, extStorage) == 
-                    PackageManager.PERMISSION_GRANTED) {
-                storagePermission = PermissionState.GRANTED;
+            if (Build.VERSION.SDK_INT >= 30) {
+                // Android 11+: WRITE_EXTERNAL_STORAGE is a no-op.
+                // Need MANAGE_EXTERNAL_STORAGE for broad file access.
+                if (Environment.isExternalStorageManager()) {
+                    storagePermission = PermissionState.GRANTED;
+                } else {
+                    storagePermission = PermissionState.REQUESTED;
+                    try {
+                        Intent intent = new Intent(
+                                Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Intent intent = new Intent(
+                                Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                        startActivity(intent);
+                    }
+                }
             } else {
-                storagePermission = PermissionState.REQUESTED;
-                ActivityCompat.requestPermissions(this, new String[]{extStorage}, 0);
+                // Android 10 and below: use legacy WRITE_EXTERNAL_STORAGE
+                String extStorage = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+                if (ContextCompat.checkSelfPermission(this, extStorage) ==
+                        PackageManager.PERMISSION_GRANTED) {
+                    storagePermission = PermissionState.GRANTED;
+                } else {
+                    storagePermission = PermissionState.REQUESTED;
+                    ActivityCompat.requestPermissions(this, new String[]{extStorage}, 0);
+                }
             }
         }
         if (storagePermission != PermissionState.GRANTED)
@@ -743,6 +828,7 @@ public class DroidFish extends Activity
             else
                 storagePermission = PermissionState.DENIED;
         }
+        // Camera permission for QR scanning is now handled in NetworkEngineConfig Activity
         createDirectories();
     }
 
@@ -822,6 +908,147 @@ public class DroidFish extends Activity
             DroidFishApp.toast(e.getMessage(), Toast.LENGTH_LONG);
         }
         return new Pair<>(pgnOrFen,filename);
+    }
+
+    /** Handle import of a .chessuci connection file.
+     *  Reads JSON, validates format, creates NETE config files for each engine.
+     */
+    private void handleChessUciImport(Uri data) {
+        if (data == null) {
+            DroidFishApp.toast(R.string.import_failed, Toast.LENGTH_SHORT);
+            return;
+        }
+        try {
+            String jsonStr;
+            android.content.ContentResolver resolver = getContentResolver();
+            try (InputStream in = resolver.openInputStream(data)) {
+                if (in == null)
+                    throw new IOException("No input stream");
+                jsonStr = FileUtil.readFromStream(in);
+            }
+
+            JSONObject root = new JSONObject(jsonStr);
+            if (!"chess-uci-server".equals(root.optString("type", ""))) {
+                DroidFishApp.toast(R.string.invalid_connection_file, Toast.LENGTH_SHORT);
+                return;
+            }
+            int version = root.optInt("version", 0);
+            if (version < 1) {
+                DroidFishApp.toast(R.string.invalid_connection_file, Toast.LENGTH_SHORT);
+                return;
+            }
+
+            JSONObject security = root.optJSONObject("security");
+            boolean tls = false;
+            String authMethod = "token";
+            String token = "";
+            String psk = "";
+            String fingerprint = "";
+            if (security != null) {
+                tls = security.optBoolean("tls", false);
+                authMethod = security.optString("auth_method", "token");
+                token = security.optString("token", "");
+                psk = security.optString("psk", "");
+                fingerprint = security.optString("fingerprint", "");
+            }
+
+            JSONArray engines = root.getJSONArray("engines");
+            boolean singlePort = root.optBoolean("single_port", false);
+            int sharedPort = root.optInt("port", 0);
+            int count = 0;
+            String lastConfigPath = null;
+
+            String sep = File.separator;
+            String engineDir = Environment.getExternalStorageDirectory() + sep +
+                    engineDir(this) + sep;
+            new File(engineDir).mkdirs();
+
+            for (int i = 0; i < engines.length(); i++) {
+                JSONObject eng = engines.getJSONObject(i);
+                String name = eng.getString("name");
+                int port = eng.getInt("port");
+                JSONObject endpoints = eng.optJSONObject("endpoints");
+
+                String lanHost = "";
+                String externalHost = "";
+                String relayHost = "";
+                int relayPort = 0;
+                String relaySession = "";
+                String mdnsName = eng.optString("mdns_name", name);
+                String selectedEngine = "";
+
+                // In single_port mode, all engines share the same port
+                if (singlePort && sharedPort > 0) {
+                    port = sharedPort;
+                    selectedEngine = name;
+                }
+
+                if (endpoints != null) {
+                    JSONObject lan = endpoints.optJSONObject("lan");
+                    if (lan != null) {
+                        lanHost = lan.optString("host", "");
+                        if (!singlePort) {
+                            port = lan.optInt("port", port);
+                        }
+                    }
+                    JSONObject upnp = endpoints.optJSONObject("upnp");
+                    if (upnp != null) {
+                        externalHost = upnp.optString("host", "");
+                    }
+                    JSONObject relay = endpoints.optJSONObject("relay");
+                    if (relay != null) {
+                        relayHost = relay.optString("host", "");
+                        relayPort = relay.optInt("port", 0);
+                        relaySession = relay.optString("session_id", "");
+                    }
+                }
+
+                if (lanHost.isEmpty()) {
+                    lanHost = root.optString("server_name", "").replaceAll("[^0-9.]", "");
+                }
+
+                // Prefer external_host (WAN IP) as primary host when available;
+                // mDNS discovery handles the local-network case regardless.
+                String primaryHost = !externalHost.isEmpty() ? externalHost : lanHost;
+
+                // Write extended NETE file (14 lines)
+                String configPath = engineDir + name;
+                try (FileWriter fw = new FileWriter(configPath)) {
+                    fw.write("NETE\n");
+                    fw.write(primaryHost + "\n");
+                    fw.write(port + "\n");
+                    fw.write((tls ? "tls" : "notls") + "\n");
+                    fw.write(token + "\n");
+                    fw.write(fingerprint + "\n");
+                    fw.write(authMethod + "\n");
+                    fw.write(psk + "\n");
+                    fw.write(relayHost + "\n");
+                    fw.write(relayPort + "\n");
+                    fw.write(relaySession + "\n");
+                    fw.write(externalHost + "\n");
+                    fw.write(mdnsName + "\n");
+                    fw.write(selectedEngine + "\n");
+                    count++;
+                    lastConfigPath = configPath;
+                }
+            }
+
+            String msg = String.format(getString(R.string.engines_imported), count);
+            DroidFishApp.toast(msg, Toast.LENGTH_SHORT);
+
+            // If single engine, auto-select it
+            if (count == 1 && lastConfigPath != null) {
+                setEngine(lastConfigPath);
+            }
+
+        } catch (Exception e) {
+            DroidFishApp.toast(R.string.import_failed, Toast.LENGTH_SHORT);
+        }
+    }
+
+    /** Get the engine config directory name. */
+    private static String engineDir(Context ctx) {
+        return "DroidFish" + File.separator + "uci";
     }
 
     private byte[] strToByteArr(String str) {
@@ -1025,6 +1252,9 @@ public class DroidFish extends Activity
             byte[] token = data == null ? null : cache.storeBytes(data);
             outState.putByteArray("gameStateT", token);
             outState.putInt("gameStateVersion", serializeVersion);
+            // Also save in ViewModel for process death recovery
+            if (gameViewModel != null)
+                gameViewModel.setSavedGameState(data, serializeVersion);
         }
     }
 
@@ -1035,6 +1265,14 @@ public class DroidFish extends Activity
             ctrl.setGuiPaused(false);
         notificationActive = true;
         updateNotification();
+        // Re-check MANAGE_EXTERNAL_STORAGE after returning from Settings
+        if (Build.VERSION.SDK_INT >= 30 &&
+                storagePermission == PermissionState.REQUESTED) {
+            if (Environment.isExternalStorageManager()) {
+                storagePermission = PermissionState.GRANTED;
+                createDirectories();
+            }
+        }
         super.onResume();
     }
 
@@ -1060,6 +1298,7 @@ public class DroidFish extends Activity
         setAutoMode(AutoMode.OFF);
         if (ctrl != null)
             ctrl.shutdownEngine();
+        DroidBook.getInstance().shutdownExplorer();
         setNotification(false);
         if (speech != null)
             speech.shutdown();
@@ -1155,6 +1394,9 @@ public class DroidFish extends Activity
         bookOptions.preferMainLines = settings.getBoolean("bookPreferMainLines", false);
         bookOptions.tournamentMode = settings.getBoolean("bookTournamentMode", false);
         bookOptions.random = (settings.getInt("bookRandom", 500) - 500) * (3.0 / 500);
+        bookOptions.lichessExplorerEnabled = settings.getBoolean("lichessExplorer", true);
+        bookOptions.lichessExplorerDb = settings.getString("lichessExplorerDb", "masters");
+        bookOptions.lichessPlayerName = settings.getString("lichessPlayerName", "");
         setBookOptions();
 
         File extDir = Environment.getExternalStorageDirectory();
@@ -1311,9 +1553,15 @@ public class DroidFish extends Activity
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
+    private static boolean isBuiltinEngine(String engine) {
+        return "stockfish".equals(engine) ||
+               "rodent4".equals(engine) ||
+               "patricia".equals(engine);
+    }
+
     private void setEngine(String engine) {
         if (!storageAvailable()) {
-            if (!"stockfish".equals(engine) && !"cuckoochess".equals(engine))
+            if (!isBuiltinEngine(engine))
                 engine = "stockfish";
         }
         ctrl.setEngine(engine);
@@ -1335,10 +1583,12 @@ public class DroidFish extends Activity
         } else if (engine.contains("/")) {
             int idx = engine.lastIndexOf('/');
             eName = engine.substring(idx + 1);
+        } else if ("rodent4".equals(engine)) {
+            eName = getString(R.string.rodent_engine);
+        } else if ("patricia".equals(engine)) {
+            eName = getString(R.string.patricia_engine);
         } else {
-            eName = getString("cuckoochess".equals(engine) ?
-                              R.string.cuckoochess_engine :
-                              R.string.stockfish_engine);
+            eName = getString(R.string.stockfish_engine);
         }
         if (ctrl != null && !ctrl.analysisMode())
             if (elo != Integer.MAX_VALUE)
@@ -1459,6 +1709,7 @@ public class DroidFish extends Activity
         FORCE_MOVE,
         DRAW,
         SELECT_BOOK,
+        OPENING_EXPLORER,
         MANAGE_ENGINES,
         SET_COLOR_THEME,
         ABOUT,
@@ -1476,6 +1727,7 @@ public class DroidFish extends Activity
             new DrawerItem(DrawerItemId.EDIT_BOARD, R.string.option_edit_board),
             new DrawerItem(DrawerItemId.FILE_MENU, R.string.option_file),
             new DrawerItem(DrawerItemId.SELECT_BOOK, R.string.option_select_book),
+            new DrawerItem(DrawerItemId.OPENING_EXPLORER, R.string.option_opening_explorer),
             new DrawerItem(DrawerItemId.MANAGE_ENGINES, R.string.option_manage_engines),
             new DrawerItem(DrawerItemId.SET_COLOR_THEME, R.string.option_color_theme),
             new DrawerItem(DrawerItemId.SETTINGS, R.string.option_settings),
@@ -1556,11 +1808,16 @@ public class DroidFish extends Activity
             if (storageAvailable())
                 reShowDialog(SELECT_BOOK_DIALOG);
             break;
+        case OPENING_EXPLORER: {
+            Intent i = new Intent(DroidFish.this, OpeningExplorerActivity.class);
+            i.putExtra("lichessDb", bookOptions.lichessExplorerDb);
+            i.putExtra("playerName", bookOptions.lichessPlayerName);
+            i.putExtra("flipped", boardFlipped);
+            startActivity(i);
+            break;
+        }
         case MANAGE_ENGINES:
-            if (storageAvailable())
-                reShowDialog(MANAGE_ENGINES_DIALOG);
-            else
-                reShowDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
+            reShowDialog(MANAGE_ENGINES_DIALOG);
             break;
         case SET_COLOR_THEME:
             showDialog(SET_COLOR_THEME_DIALOG);
@@ -1582,6 +1839,9 @@ public class DroidFish extends Activity
     static private final int RESULT_OI_FEN_LOAD =  8;
     static private final int RESULT_GET_FEN     =  9;
     static private final int RESULT_EDITOPTIONS = 10;
+    static private final int RESULT_SCAN_QR     = 11;
+    static private final int RESULT_NETWORK_CONFIG = 12;
+    private static final int PERMISSION_REQUEST_CAMERA = 101;
 
     private void startEditBoard(String fen) {
         Intent i = new Intent(DroidFish.this, EditBoard.class);
@@ -1687,6 +1947,41 @@ public class DroidFish extends Activity
                 Map<String,String> uciOpts =
                     (Map<String,String>)data.getSerializableExtra("org.petero.droidfish.ucioptions");
                 ctrl.setEngineUCIOptions(uciOpts);
+            }
+            break;
+        case RESULT_SCAN_QR:
+            // QR scanning is now handled inside NetworkEngineConfig Activity
+            break;
+        case RESULT_NETWORK_CONFIG:
+            if (resultCode == NetworkEngineConfig.RESULT_DELETED) {
+                // If active engine was deleted, reset to stockfish
+                String eng = settings.getString("engine", "stockfish");
+                if (!eng.equals("stockfish") && !new File(eng).exists()) {
+                    Editor ed = settings.edit();
+                    ed.putString("engine", "stockfish");
+                    ed.apply();
+                    setEngineOptions(false);
+                    setEngine("stockfish");
+                } else {
+                    setEngineOptions(true);
+                }
+            } else if (resultCode == RESULT_OK) {
+                // Check if an engine should be auto-activated (e.g., after QR import)
+                String activateEngine = data != null
+                        ? data.getStringExtra(NetworkEngineConfig.EXTRA_ACTIVATE_ENGINE) : null;
+                if (activateEngine != null && new File(activateEngine).exists()) {
+                    Editor ed = settings.edit();
+                    ed.putString("engine", activateEngine);
+                    ed.apply();
+                    setEngineOptions(false);
+                    setEngine(activateEngine);
+                } else {
+                    setEngineOptions(true);
+                }
+            } else if (resultCode == NetworkEngineConfig.RESULT_IMPORT_FILE) {
+                if (data != null && data.getData() != null) {
+                    handleChessUciImport(data.getData());
+                }
             }
             break;
         }
@@ -1893,6 +2188,7 @@ public class DroidFish extends Activity
     private String thinkingStr1 = "";
     private String thinkingStr2 = "";
     private String bookInfoStr = "";
+    private String explorerInfoStr = "";
     private String ecoInfoStr = "";
     private int distToEcoTree = 0;
     private String variantStr = "";
@@ -1905,6 +2201,7 @@ public class DroidFish extends Activity
         thinkingStr1 = ti.pvStr;
         thinkingStr2 = ti.statStr;
         bookInfoStr = ti.bookInfo;
+        explorerInfoStr = ti.explorerInfo != null ? ti.explorerInfo : "";
         ecoInfoStr = ti.eco;
         distToEcoTree = ti.distToEcoTree;
         pvMoves = ti.pvMoves;
@@ -1969,11 +2266,18 @@ public class DroidFish extends Activity
             thinking.append(Html.fromHtml(s));
             thinkingEmpty = false;
         }
-        if (mShowBookHints && !bookInfoStr.isEmpty() && ctrl.humansTurn()) {
-            String s = thinkingEmpty ? "" : "<br>";
-            s += Util.boldStart + getString(R.string.book) + Util.boldStop + bookInfoStr;
-            thinking.append(Html.fromHtml(s));
-            thinkingEmpty = false;
+        if (mShowBookHints && ctrl.humansTurn()) {
+            if (!explorerInfoStr.isEmpty()) {
+                String s = thinkingEmpty ? "" : "<br>";
+                s += explorerInfoStr;
+                thinking.append(Html.fromHtml(s));
+                thinkingEmpty = false;
+            } else if (!bookInfoStr.isEmpty()) {
+                String s = thinkingEmpty ? "" : "<br>";
+                s += Util.boldStart + getString(R.string.book) + Util.boldStop + bookInfoStr;
+                thinking.append(Html.fromHtml(s));
+                thinkingEmpty = false;
+            }
         }
         if (showVariationLine && (variantStr.indexOf(' ') >= 0)) {
             String s = thinkingEmpty ? "" : "<br>";
@@ -2035,6 +2339,7 @@ public class DroidFish extends Activity
     static private final int CLIPBOARD_DIALOG = 26;
     static private final int SELECT_FEN_FILE_DIALOG = 27;
     static private final int SET_STRENGTH_DIALOG = 28;
+    static private final int NETWORK_ENGINE_UCI_DIALOG = 29;
 
     /** Remove and show a dialog. */
     void reShowDialog(int id) {
@@ -2069,8 +2374,8 @@ public class DroidFish extends Activity
         case MANAGE_ENGINES_DIALOG:          return manageEnginesDialog();
         case NETWORK_ENGINE_DIALOG:          return networkEngineDialog();
         case NEW_NETWORK_ENGINE_DIALOG:      return newNetworkEngineDialog();
-        case NETWORK_ENGINE_CONFIG_DIALOG:   return networkEngineConfigDialog();
         case DELETE_NETWORK_ENGINE_DIALOG:   return deleteNetworkEngineDialog();
+        case NETWORK_ENGINE_UCI_DIALOG:      return networkEngineUciDialog();
         case CLIPBOARD_DIALOG:               return clipBoardDialog();
         case SELECT_FEN_FILE_DIALOG:         return selectFenFileDialog();
         }
@@ -2357,7 +2662,7 @@ public class DroidFish extends Activity
                 DroidFishApp.toast(e.getMessage(), Toast.LENGTH_LONG);
                 return;
             }
-            String authority = "org.petero.droidfish.fileprovider";
+            String authority = BuildConfig.APPLICATION_ID + ".fileprovider";
             Uri uri = FileProvider.getUriForFile(this, authority, file);
             i.putExtra(Intent.EXTRA_STREAM, uri);
         }
@@ -2389,7 +2694,7 @@ public class DroidFish extends Activity
             return;
         }
 
-        String authority = "org.petero.droidfish.fileprovider";
+        String authority = BuildConfig.APPLICATION_ID + ".fileprovider";
         Uri uri = FileProvider.getUriForFile(this, authority, file);
 
         Intent i = new Intent(Intent.ACTION_SEND);
@@ -2553,8 +2858,9 @@ public class DroidFish extends Activity
     }
 
     private static boolean reservedEngineName(String name) {
-        return "cuckoochess".equals(name) ||
-               "stockfish".equals(name) ||
+        return "stockfish".equals(name) ||
+               "rodent4".equals(name) ||
+               "patricia".equals(name) ||
                name.endsWith(".ini");
     }
 
@@ -2562,7 +2868,8 @@ public class DroidFish extends Activity
         final ArrayList<String> items = new ArrayList<>();
         final ArrayList<String> ids = new ArrayList<>();
         ids.add("stockfish"); items.add(getString(R.string.stockfish_engine));
-        ids.add("cuckoochess"); items.add(getString(R.string.cuckoochess_engine));
+        ids.add("rodent4");   items.add(getString(R.string.rodent_engine));
+        ids.add("patricia");  items.add(getString(R.string.patricia_engine));
 
         if (storageAvailable()) {
             final String sep = File.separator;
@@ -2754,6 +3061,7 @@ public class DroidFish extends Activity
 
     private Dialog gameModeDialog() {
         final String[] items = {
+            getString(R.string.quick_play),
             getString(R.string.analysis_mode),
             getString(R.string.edit_replay_game),
             getString(R.string.play_white),
@@ -2767,12 +3075,16 @@ public class DroidFish extends Activity
             int gameModeType = -1;
             boolean matchPlayerNames = false;
             switch (item) {
-            case 0: gameModeType = GameMode.ANALYSIS;      break;
-            case 1: gameModeType = GameMode.EDIT_GAME;     break;
-            case 2: gameModeType = GameMode.PLAYER_WHITE; matchPlayerNames = true; break;
-            case 3: gameModeType = GameMode.PLAYER_BLACK; matchPlayerNames = true; break;
-            case 4: gameModeType = GameMode.TWO_PLAYERS;   break;
-            case 5: gameModeType = GameMode.TWO_COMPUTERS; break;
+            case 0: // Quick Play
+                dialog.dismiss();
+                showQuickPlayDialog();
+                return;
+            case 1: gameModeType = GameMode.ANALYSIS;      break;
+            case 2: gameModeType = GameMode.EDIT_GAME;     break;
+            case 3: gameModeType = GameMode.PLAYER_WHITE; matchPlayerNames = true; break;
+            case 4: gameModeType = GameMode.PLAYER_BLACK; matchPlayerNames = true; break;
+            case 5: gameModeType = GameMode.TWO_PLAYERS;   break;
+            case 6: gameModeType = GameMode.TWO_COMPUTERS; break;
             default: break;
             }
             dialog.dismiss();
@@ -2782,6 +3094,29 @@ public class DroidFish extends Activity
             }
         });
         return builder.create();
+    }
+
+    private void showQuickPlayDialog() {
+        Dialog d = QuickPlayDialog.create(this, (gameModePicked, elo, timeMs, incrementMs) -> {
+            // Set engine strength
+            Map<String, String> uciOpts = new HashMap<>();
+            uciOpts.put("UCI_LimitStrength", "true");
+            uciOpts.put("UCI_Elo", String.valueOf(elo));
+            ctrl.setEngineUCIOptions(uciOpts);
+
+            // Set time control
+            if (timeMs > 0) {
+                TimeControlData tcData = new TimeControlData();
+                tcData.setTimeControl(timeMs, 60, incrementMs);
+                ctrl.newGame(new GameMode(gameModePicked), tcData);
+            } else {
+                newGameMode(gameModePicked);
+            }
+
+            // Flip board if playing black
+            setBoardFlip(true);
+        });
+        d.show();
     }
 
     private Dialog moveListMenuDialog() {
@@ -3238,13 +3573,18 @@ public class DroidFish extends Activity
     private Dialog manageEnginesDialog() {
         final int SELECT_ENGINE = 0;
         final int SET_ENGINE_OPTIONS = 1;
-        final int CONFIG_NET_ENGINE = 2;
+        final int CONFIG_NET_ENGINE_UCI = 2;
+        final int CONFIG_NET_ENGINE = 3;
         List<String> lst = new ArrayList<>();
         final List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.select_engine)); actions.add(SELECT_ENGINE);
         if (canSetEngineOptions()) {
             lst.add(getString(R.string.set_engine_options));
             actions.add(SET_ENGINE_OPTIONS);
+        }
+        if (hasNetworkEngines()) {
+            lst.add(getString(R.string.configure_engine_uci_options));
+            actions.add(CONFIG_NET_ENGINE_UCI);
         }
         lst.add(getString(R.string.configure_network_engine)); actions.add(CONFIG_NET_ENGINE);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -3257,6 +3597,9 @@ public class DroidFish extends Activity
             case SET_ENGINE_OPTIONS:
                 setEngineOptions();
                 break;
+            case CONFIG_NET_ENGINE_UCI:
+                reShowDialog(NETWORK_ENGINE_UCI_DIALOG);
+                break;
             case CONFIG_NET_ENGINE:
                 reShowDialog(NETWORK_ENGINE_DIALOG);
                 break;
@@ -3267,7 +3610,8 @@ public class DroidFish extends Activity
 
     /** Return true if engine UCI options can be set now. */
     private boolean canSetEngineOptions() {
-        if (!storageAvailable())
+        String engine = settings.getString("engine", "stockfish");
+        if (!storageAvailable() && !isBuiltinEngine(engine))
             return false;
         UCIOptions uciOpts = ctrl.getUCIOptions();
         if (uciOpts == null)
@@ -3292,24 +3636,146 @@ public class DroidFish extends Activity
         }
     }
 
+    /** Return true if any network engine NETE files exist that have a
+     *  selectedEngine (line 14) — i.e. actual engines, not server configs. */
+    private boolean hasNetworkEngines() {
+        String sep = File.separator;
+        String base = Environment.getExternalStorageDirectory() + sep + engineDir + sep;
+        String[] fileNames = FileUtil.findFilesInDirectory(engineDir, filename -> {
+            if (reservedEngineName(filename))
+                return false;
+            if (!EngineUtil.isNetEngine(filename))
+                return false;
+            try {
+                String[] lines = FileUtil.readFile(base + filename);
+                return lines.length >= 14 && !lines[13].trim().isEmpty();
+            } catch (IOException e) {
+                return false;
+            }
+        });
+        return fileNames.length > 0;
+    }
+
+    /** Dialog to select a network engine for UCI option configuration.
+     *  Only shows NETE files that have a selectedEngine (line 14),
+     *  filtering out bare server configs (those belong in Configure Network Server). */
+    private Dialog networkEngineUciDialog() {
+        String sep = File.separator;
+        String base = Environment.getExternalStorageDirectory() + sep + engineDir + sep;
+        String[] fileNames = FileUtil.findFilesInDirectory(engineDir, filename -> {
+            if (reservedEngineName(filename))
+                return false;
+            if (!EngineUtil.isNetEngine(filename))
+                return false;
+            try {
+                String[] lines = FileUtil.readFile(base + filename);
+                return lines.length >= 14 && !lines[13].trim().isEmpty();
+            } catch (IOException e) {
+                return false;
+            }
+        });
+        final List<String> itemList = new ArrayList<>();
+        final List<String> idList = new ArrayList<>();
+        for (String fileName : fileNames) {
+            idList.add(base + fileName);
+            itemList.add(fileName);
+        }
+        final int numItems = itemList.size();
+        final String[] items = itemList.toArray(new String[0]);
+        final String[] ids = idList.toArray(new String[0]);
+        String currEngine = ctrl.getEngine();
+        int defaultItem = 0;
+        for (int i = 0; i < numItems; i++)
+            if (ids[i].equals(currEngine)) {
+                defaultItem = i;
+                break;
+            }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.configure_engine_uci_options);
+        builder.setSingleChoiceItems(items, defaultItem, (dialog, item) -> {
+            if ((item < 0) || (item >= numItems))
+                return;
+            dialog.dismiss();
+            String selectedEngine = ids[item];
+            String activeEngine = settings.getString("engine", "stockfish");
+            if (selectedEngine.equals(activeEngine)) {
+                // Engine is already active — try to open UCI options
+                UCIOptions uciOpts = ctrl.getUCIOptions();
+                if (uciOpts != null) {
+                    boolean hasVisible = false;
+                    for (String name : uciOpts.getOptionNames())
+                        if (uciOpts.getOption(name).visible) { hasVisible = true; break; }
+                    if (hasVisible) {
+                        setEngineOptions();
+                        return;
+                    }
+                }
+                // Options not available yet (still connecting)
+                DroidFishApp.toast(R.string.engine_connecting_toast, Toast.LENGTH_LONG);
+            } else {
+                // Switch to the selected engine
+                Editor editor = settings.edit();
+                editor.putString("engine", selectedEngine);
+                editor.apply();
+                setEngineOptions(false);
+                setEngine(selectedEngine);
+                DroidFishApp.toast(R.string.engine_activated_toast, Toast.LENGTH_LONG);
+            }
+        });
+        builder.setOnCancelListener(dialog -> reShowDialog(MANAGE_ENGINES_DIALOG));
+        return builder.create();
+    }
+
     private Dialog networkEngineDialog() {
         String[] fileNames = FileUtil.findFilesInDirectory(engineDir, filename -> {
             if (reservedEngineName(filename))
                 return false;
             return EngineUtil.isNetEngine(filename);
         });
-        final int numItems = fileNames.length + 1;
-        final String[] items = new String[numItems];
-        final String[] ids = new String[numItems];
-        int idx = 0;
         String sep = File.separator;
         String base = Environment.getExternalStorageDirectory() + sep + engineDir + sep;
+
+        // Group NETE files by server (host:port) so multi-engine imports
+        // from the same server appear as a single entry.
+        java.util.LinkedHashMap<String, java.util.List<String>> serverGroups = new java.util.LinkedHashMap<>();
         for (String fileName : fileNames) {
-            ids[idx] = base + fileName;
-            items[idx] = fileName;
-            idx++;
+            String path = base + fileName;
+            String serverKey = path; // default: unique per file
+            try {
+                String[] lines = FileUtil.readFile(path);
+                if (lines.length >= 3) {
+                    serverKey = lines[1].trim() + ":" + lines[2].trim();
+                }
+            } catch (IOException ignore) {}
+            java.util.List<String> group = serverGroups.get(serverKey);
+            if (group == null) {
+                group = new ArrayList<>();
+                serverGroups.put(serverKey, group);
+            }
+            group.add(path);
         }
-        ids[idx] = ""; items[idx] = getString(R.string.new_engine); idx++;
+
+        // Build dialog items: one entry per server, plus New + Setup Guide
+        List<String> itemList = new ArrayList<>();
+        List<String> idList = new ArrayList<>();
+        for (java.util.Map.Entry<String, java.util.List<String>> entry : serverGroups.entrySet()) {
+            java.util.List<String> files = entry.getValue();
+            if (files.size() == 1) {
+                itemList.add(new File(files.get(0)).getName());
+            } else {
+                itemList.add(entry.getKey() + " (" + files.size() + " engines)");
+            }
+            idList.add(files.get(0)); // representative file for config
+        }
+        itemList.add(getString(R.string.new_engine));
+        idList.add("");
+        final int setupGuideIdx = itemList.size();
+        itemList.add("\u2139 " + getString(R.string.net_engine_setup_guide));
+        idList.add("guide");
+
+        final int numItems = itemList.size();
+        final String[] items = itemList.toArray(new String[0]);
+        final String[] ids = idList.toArray(new String[0]);
         String currEngine = ctrl.getEngine();
         int defaultItem = 0;
         for (int i = 0; i < numItems; i++)
@@ -3323,15 +3789,31 @@ public class DroidFish extends Activity
             if ((item < 0) || (item >= numItems))
                 return;
             dialog.dismiss();
-            if (item == numItems - 1) {
-                showDialog(NEW_NETWORK_ENGINE_DIALOG);
+            if (item == setupGuideIdx) {
+                showNetworkEngineSetupGuide();
+            } else if (item == setupGuideIdx - 1) {
+                String name = generateServerName();
+                String pathName = base + name;
+                networkEngineToConfig = pathName;
+                launchNetworkEngineConfig(pathName);
             } else {
                 networkEngineToConfig = ids[item];
-                reShowDialog(NETWORK_ENGINE_CONFIG_DIALOG);
+                launchNetworkEngineConfig(networkEngineToConfig);
             }
         });
         builder.setOnCancelListener(dialog -> reShowDialog(MANAGE_ENGINES_DIALOG));
         return builder.create();
+    }
+
+    private void showNetworkEngineSetupGuide() {
+        String msg = getString(R.string.net_setup_guide_text);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.net_engine_setup_guide);
+        builder.setMessage(msg);
+        builder.setPositiveButton(android.R.string.ok, (dialog, which) ->
+            reShowDialog(NETWORK_ENGINE_DIALOG));
+        builder.setOnCancelListener(dialog -> reShowDialog(NETWORK_ENGINE_DIALOG));
+        builder.create().show();
     }
 
     // Filename of network engine to configure
@@ -3365,7 +3847,7 @@ public class DroidFish extends Activity
                 return;
             }
             networkEngineToConfig = pathName;
-            reShowDialog(NETWORK_ENGINE_CONFIG_DIALOG);
+            launchNetworkEngineConfig(pathName);
         };
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> createEngine.run());
         builder.setNegativeButton(R.string.cancel, (dialog, which) -> reShowDialog(NETWORK_ENGINE_DIALOG));
@@ -3383,59 +3865,26 @@ public class DroidFish extends Activity
         return dialog;
     }
 
-    // Configure network engine settings
-    private Dialog networkEngineConfigDialog() {
-        View content = View.inflate(this, R.layout.network_engine_config, null);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(content);
-        builder.setTitle(R.string.configure_network_engine);
-        final EditText hostNameView = content.findViewById(R.id.network_engine_host);
-        final EditText portView = content.findViewById(R.id.network_engine_port);
-        String hostName = "";
-        String port = "0";
-        try {
-            if (EngineUtil.isNetEngine(networkEngineToConfig)) {
-                String[] lines = FileUtil.readFile(networkEngineToConfig);
-                if (lines.length > 1)
-                    hostName = lines[1];
-                if (lines.length > 2)
-                    port = lines[2];
-            }
-        } catch (IOException ignore) {
+    /** Generate a unique server config name, e.g. "Network Server", "Network Server 2", etc. */
+    private String generateServerName() {
+        String sep = File.separator;
+        String baseDir = Environment.getExternalStorageDirectory() + sep + engineDir + sep;
+        String baseName = "Network Server";
+        if (!new File(baseDir + baseName).exists() && !reservedEngineName(baseName))
+            return baseName;
+        for (int i = 2; i < 100; i++) {
+            String name = baseName + " " + i;
+            if (!new File(baseDir + name).exists() && !reservedEngineName(name))
+                return name;
         }
-        hostNameView.setText(hostName);
-        portView.setText(port);
-        final Runnable writeConfig = () -> {
-            String hostName1 = hostNameView.getText().toString();
-            String port1 = portView.getText().toString();
-            try (FileWriter fw = new FileWriter(new File(networkEngineToConfig), false)) {
-                fw.write("NETE\n");
-                fw.write(hostName1); fw.write("\n");
-                fw.write(port1); fw.write("\n");
-                setEngineOptions(true);
-            } catch (IOException e) {
-                DroidFishApp.toast(e.getMessage(), Toast.LENGTH_LONG);
-            }
-        };
-        builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-            writeConfig.run();
-            reShowDialog(NETWORK_ENGINE_DIALOG);
-        });
-        builder.setNegativeButton(R.string.cancel, (dialog, which) -> reShowDialog(NETWORK_ENGINE_DIALOG));
-        builder.setOnCancelListener(dialog -> reShowDialog(NETWORK_ENGINE_DIALOG));
-        builder.setNeutralButton(R.string.delete, (dialog, which) -> reShowDialog(DELETE_NETWORK_ENGINE_DIALOG));
+        return baseName + " " + System.currentTimeMillis();
+    }
 
-        final Dialog dialog = builder.create();
-        portView.setOnKeyListener((v, keyCode, event) -> {
-            if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                writeConfig.run();
-                dialog.cancel();
-                reShowDialog(NETWORK_ENGINE_DIALOG);
-                return true;
-            }
-            return false;
-        });
-        return dialog;
+    /** Launch the NetworkEngineConfig Activity for the given config path. */
+    private void launchNetworkEngineConfig(String configPath) {
+        Intent intent = new Intent(this, NetworkEngineConfig.class);
+        intent.putExtra(NetworkEngineConfig.EXTRA_CONFIG_PATH, configPath);
+        startActivityForResult(intent, RESULT_NETWORK_CONFIG);
     }
 
     private Dialog deleteNetworkEngineDialog() {
@@ -3444,11 +3893,34 @@ public class DroidFish extends Activity
         String msg = networkEngineToConfig;
         if (msg.lastIndexOf('/') >= 0)
             msg = msg.substring(msg.lastIndexOf('/')+1);
-        builder.setMessage(getString(R.string.network_engine) + ": " + msg);
+
+        // Find associated engine files sharing the same host:port
+        List<File> associated = findAssociatedNeteFiles(networkEngineToConfig);
+        String displayMsg = getString(R.string.network_engine) + ": " + msg;
+        if (!associated.isEmpty()) {
+            displayMsg += "\n\n" + associated.size() + " associated engine(s) will also be removed.";
+        }
+
+        builder.setMessage(displayMsg);
         builder.setPositiveButton(R.string.yes, (dialog, id) -> {
+            // Delete associated engine NETE files
+            for (File f : associated) {
+                f.delete();
+            }
             new File(networkEngineToConfig).delete();
+
+            // If the active engine was deleted (or one of the associated files), reset
             String engine = settings.getString("engine", "stockfish");
-            if (engine.equals(networkEngineToConfig)) {
+            boolean needReset = engine.equals(networkEngineToConfig);
+            if (!needReset) {
+                for (File f : associated) {
+                    if (engine.equals(f.getAbsolutePath())) {
+                        needReset = true;
+                        break;
+                    }
+                }
+            }
+            if (needReset) {
                 engine = "stockfish";
                 Editor editor = settings.edit();
                 editor.putString("engine", engine);
@@ -3466,6 +3938,45 @@ public class DroidFish extends Activity
         });
         builder.setOnCancelListener(dialog -> reShowDialog(NETWORK_ENGINE_DIALOG));
         return builder.create();
+    }
+
+    /** Find all NETE files in the engine directory that share the same host:port
+     *  as the given config file (excluding that file itself). */
+    private List<File> findAssociatedNeteFiles(String configPath) {
+        List<File> matches = new ArrayList<>();
+        File configFile = new File(configPath);
+        File dir = configFile.getParentFile();
+        if (dir == null || !dir.isDirectory())
+            return matches;
+
+        String serverKey;
+        try {
+            String[] lines = FileUtil.readFile(configPath);
+            if (lines.length < 3) return matches;
+            serverKey = lines[1].trim() + ":" + lines[2].trim();
+        } catch (IOException e) {
+            return matches;
+        }
+
+        File[] files = dir.listFiles();
+        if (files == null) return matches;
+
+        for (File f : files) {
+            if (!f.isFile() || f.equals(configFile))
+                continue;
+            if (!EngineUtil.isNetEngine(f.getAbsolutePath()))
+                continue;
+            try {
+                String[] lines = FileUtil.readFile(f.getAbsolutePath());
+                if (lines.length >= 3) {
+                    String key = lines[1].trim() + ":" + lines[2].trim();
+                    if (key.equals(serverKey)) {
+                        matches.add(f);
+                    }
+                }
+            } catch (IOException ignore) {}
+        }
+        return matches;
     }
 
     /** Open a load/save file dialog. Uses OI file manager if available. */
@@ -3746,7 +4257,8 @@ public class DroidFish extends Activity
             String contentTitle = getString(R.string.background_processing);
             String contentText = getString(R.string.lot_cpu_power);
             Intent notificationIntent = new Intent(this, CPUWarning.class);
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+            int pendingFlags = (Build.VERSION.SDK_INT >= 23) ? PendingIntent.FLAG_IMMUTABLE : 0;
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, pendingFlags);
 
             Notification notification = new NotificationCompat.Builder(context, channelId)
                     .setSmallIcon(icon)
