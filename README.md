@@ -6,15 +6,21 @@ A feature-rich Android chess GUI forked from [peterosterlund2/droidfish](https:/
 
 ### Three Bundled Engines
 
-The original DroidFish shipped Stockfish and the weak Java-based CuckooChess engine. This fork replaces that with three compiled native engines:
+The original DroidFish shipped an older Stockfish and the weak Java-based CuckooChess engine (which played random moves at its lowest level). This fork upgrades Stockfish and adds two strong open-source engines — all compiled as native ARM binaries via the NDK:
 
-| Engine | Strength | What It Does |
-|--------|----------|-------------|
-| **Stockfish 18** | ~3190 Elo | Strongest open-source engine. Updated from upstream's v16.1 with ARM NEON dotprod support for faster analysis on modern phones. UCI_Elo range: 1320–3190. |
-| **Rodent IV** | Configurable | Personality engine with 15+ presets (Tal, Morphy, Nimzowitsch, etc.). Each personality plays a different style. Can be set very weak for beginners. |
-| **Patricia** | ~3000+ Elo | Modern C++20 engine with NNUE evaluation and Fathom tablebase support. Strong alternative to Stockfish. |
+#### Stockfish 18 (upgraded from v16.1)
 
-CuckooChess has been removed. All three engines are compiled via NDK as native `.so` libraries.
+The world's strongest open-source chess engine, now updated to version 18 with significant playing strength gains over the upstream v16.1. This build enables **ARM NEON dotprod instructions** on modern phones (ARMv8.2+) for substantially faster analysis — the same SIMD optimizations used on desktop. Adjustable strength via UCI_Elo (1320–3190) lets it play at any level from club player to superhuman.
+
+#### Rodent IV (new)
+
+A personality-driven engine with **15+ built-in playing styles** — including aggressive (Tal, Spitfire), positional (Nimzowitsch, Petrosian-style Strangler), romantic (Morphy), and defensive profiles. Each personality changes how the engine values material, king safety, pawn structure, and piece activity, producing genuinely different games rather than just weaker play. Rodent IV also supports custom personality files, opening books, and a guide book for tuned opening play. It can be configured extremely weak, making it the ideal training partner for beginners.
+
+#### Patricia (new)
+
+A modern C++20 engine with **dual NNUE neural networks** (separate nets for different game phases) and integrated **Fathom Syzygy tablebase probing** for perfect endgame play. Patricia brings a distinctly different evaluation style from Stockfish — useful for getting a second opinion on complex positions or running engine-vs-engine analysis to test the robustness of a line.
+
+CuckooChess has been removed.
 
 ### Secure Network Engine System
 
