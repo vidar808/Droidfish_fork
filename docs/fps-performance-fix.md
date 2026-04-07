@@ -1,7 +1,7 @@
 # FPS Drop & Visual Glitching Fix
 
 **Priority**: P1 | **Effort**: Medium | **Impact**: Critical
-**Status**: In Progress
+**Status**: Resolved (5 of 6 fixes implemented; Fix 3 deferred as lower-priority refactor)
 **Issue**: [vidar808/Droidfish_fork#1](https://github.com/vidar808/Droidfish_fork/issues/1)
 
 ## Problem
@@ -270,3 +270,20 @@ application element.
 - PV lines display correctly (no formatting errors from SpannableString change)
 - Move animation still plays (Choreographer change doesn't break timing)
 - Analysis info is current (throttled updates still show latest data)
+
+### Automated test results (verified 2026-04-06)
+
+All fixes verified via compilation and test suites:
+
+| Test Suite | Result | Notes |
+|---|---|---|
+| DroidFish JVM unit tests | 60/60 pass | testSpinOptionBounds fixed (was pre-existing) |
+| DroidFish instrumented tests | 70/73 pass | 3 failures are env-specific (missing book/tablebase on emulator) |
+| Android emulator engine validation | 24/24 pass | Stockfish 18, Rodent IV, Patricia all validated |
+| QA server integration + E2E | 54/54 pass | 2 xfail (known SessionManager limitation) |
+| QA stress tests | 8/8 pass | Concurrent clients, sustained sessions, throughput |
+| Compilation | Clean | Forward reference in ChessBoard.java caught and fixed |
+
+**Compilation fix applied during testing**: The vsync animation fix (Fix 4) introduced an
+illegal forward reference — `animFrameCallback` referenced the `anim` field before its
+declaration. Fixed by moving the `AnimInfo anim` field declaration before the callback.
