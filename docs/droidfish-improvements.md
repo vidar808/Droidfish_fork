@@ -310,6 +310,48 @@ Game state and preferences are device-local only. No backup or sync across devic
 
 ---
 
+## ~~Opening Book Issues~~ FIXED
+
+### ~~15. Internal book.bin missing~~ FIXED
+**Severity**: High | **Status**: DONE
+
+The internal opening book (`book.bin`) was part of the CuckooChess module which was
+removed in the fork. `InternalBook.java` loads it via `getAssets().open("book.bin")`
+and silently falls back to an empty book when missing.
+
+**Fix**: Added `buildBook` Gradle task that generates `book.bin` from `eco.pgn`
+(500+ ECO opening lines, 45KB). The task strips PGN headers and game results,
+then calls `chess.Book.main2()` to produce the binary format. The `InternalBook`
+was also updated to load from Android assets instead of Java resources.
+
+### ~~16. Book hints disappear after first move~~ FIXED
+**Severity**: High | **Status**: DONE
+
+Book arrows and text would appear briefly then vanish permanently. Root cause:
+`updateComputeThreads()` calls `clearSearchInfo()` which posts empty book state
+to the UI with `lastUIUpdateTime = 0` (immediate). Then `updateBookHints()` calls
+`notifyBookInfo()` which calls `setSearchInfo()` — but this gets throttled by the
+100ms UI update interval (from the FPS fix). With engine off, no later callback
+flushes the pending data.
+
+**Fix**: `notifyBookInfo()` now resets `lastUIUpdateTime = 0` before calling
+`setSearchInfo()`, forcing book/explorer updates to bypass the throttle.
+
+See [fps-performance-fix.md](fps-performance-fix.md) for the full throttle
+interaction diagram.
+
+### ~~17. Lichess Explorer API requires authentication~~ FIXED
+**Severity**: High | **Status**: DONE
+
+The Lichess Explorer API (`explorer.lichess.ovh`) began returning 401 after the
+Feb 2026 OVH infrastructure incident. All requests now require a Bearer token.
+
+**Fix**: Added `lichessApiToken` field to `BookOptions` and a "Lichess API Token"
+preference in Settings → Opening Book Settings (password input). The token is sent
+as `Authorization: Bearer <token>` with all explorer API requests. Explorer is
+disabled by default and requires a valid token to enable. Users generate tokens at
+`lichess.org/account/oauth/token`.
+
 ## Performance Improvements
 
 ### 13. Engine Startup Time
@@ -333,8 +375,12 @@ Some operations in `DroidFish.java` (file I/O for PGN, preferences reading) run 
 | # | Improvement | Impact | Effort | Priority | Status |
 |---|-------------|--------|--------|----------|--------|
 | - | Quick Play / ELO Difficulty | High | Medium | **P0** | **DONE** |
+| - | FPS / Animation Fixes (8 fixes) | High | Medium | **P1** | **DONE** |
 | 5 | Network Authentication | High | High | P1 | **DONE** |
 | 10 | Engine Discovery (mDNS + QR) | Medium | Medium | P2 | **DONE** |
+| 15 | Internal book.bin missing | High | Low | P1 | **DONE** |
+| 16 | Book hints disappear after move | High | Low | P1 | **DONE** |
+| 17 | Lichess Explorer API auth | High | Medium | P1 | **DONE** |
 | 1 | Refactor Main Activity | Medium | High | P1 | Open |
 | 4 | Menu Depth Reduction | Medium | Medium | P2 | Open |
 | 9 | Online Play (Lichess) | Medium | High | P2 | Open |

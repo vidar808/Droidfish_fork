@@ -1,7 +1,7 @@
 # FPS Drop & Visual Glitching Fix
 
 **Priority**: P1 | **Effort**: Medium | **Impact**: Critical
-**Status**: Resolved (5 of 6 fixes implemented; Fix 3 deferred as lower-priority refactor)
+**Status**: Resolved (5 of 6 fixes implemented; Fix 3 deferred — already mitigated by Fix 1)
 **Issue**: [vidar808/Droidfish_fork#1](https://github.com/vidar808/Droidfish_fork/issues/1)
 
 ## Problem
@@ -41,6 +41,9 @@ sustained CPU spikes on the UI thread.
 every PV line to produce algebraic notation strings. This chess logic runs
 synchronously in the callback chain before posting to the UI thread.
 
+**Note**: This already runs on the engine's background thread, not the UI thread.
+With Fix 1's throttle limiting UI posts to 10/sec, the impact is minimal. Deferred.
+
 ### 4. Animation timing hardcoded to 10ms
 **Severity**: Major | **File**: `ChessBoard.java`
 
@@ -58,184 +61,58 @@ via `setPosition()` concurrently. An inconsistent read can abort the animation
 mid-frame or cause a visual glitch.
 
 ### 6. No explicit hardware acceleration
-**Severity**: Moderate | **File**: `ChessBoard.java`
+**Severity**: Moderate | **File**: `AndroidManifest.xml`
 
-The ChessBoard custom View does not configure `setLayerType()`. Path-based
-drawing (arrow hints, decorations) may fall back to software rendering on
-some devices.
+The application element did not explicitly enable hardware-accelerated rendering.
 
-## Fix Plan
+### 7. Animation terminal frame dropped
+**Severity**: Major | **File**: `ChessBoard.java`
 
-### Fix 1: Throttle SearchListener UI updates
-**Target**: `DroidChessController.java`
-**Approach**: Batch engine info updates with a minimum interval before posting
-to the UI thread.
+The Choreographer callback only continued posting frames while `isRunning()`
+returned true. When the animation window closed, no final redraw was requested.
+The piece would remain visible at an intermediate position until some unrelated
+`invalidate()` call happened to trigger a repaint.
 
-Instead of posting every SearchListener callback immediately:
+### 8. Animation timer started too early
+**Severity**: Major | **File**: `ChessBoard.java`
 
-```java
-// BEFORE (every info line posts immediately):
-gui.runOnUIThread(() -> setThinkingInfo(ti));
+`setAnimMove()` recorded `startTime = System.currentTimeMillis()` immediately,
+but the animation was paused (`paused = true`). When `setPosition()` later
+unpaused it, frames had already been "consumed" by the delay between the two
+calls. On slow devices or with background work, the piece could start its
+animation already 30-50% through, appearing to jump.
 
-// AFTER (coalesce updates, post at most every 100ms):
-private volatile ThinkingInfo pendingThinkingInfo;
-private final Runnable thinkingInfoUpdater = () -> {
-    ThinkingInfo ti = pendingThinkingInfo;
-    if (ti != null) {
-        setThinkingInfo(ti);
-    }
-};
-
-// In setSearchInfo():
-pendingThinkingInfo = ti;
-gui.removeCallbacks(thinkingInfoUpdater);
-gui.postOnUIThreadDelayed(thinkingInfoUpdater, 100);
-```
-
-This reduces UI thread posts from 10-50/sec to a fixed 10/sec maximum while
-always showing the latest info.
-
-**Files to modify**:
-- `DroidChessController.java` — add coalescing logic
-- `GUIInterface.java` — may need `removeCallbacks()` and `postDelayed()` methods
-
-### Fix 2: Replace Html.fromHtml() with SpannableStringBuilder
-**Target**: `DroidFish.java` — `updateThinkingInfo()` method
-
-Replace HTML string construction + parsing with direct `SpannableStringBuilder`
-manipulation. This avoids the HTML tokenizer entirely.
-
-```java
-// BEFORE:
-String s = "<font color=#...>" + text + "</font>";
-thinking.append(Html.fromHtml(s));
-
-// AFTER:
-SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-ssb.setSpan(new ForegroundColorSpan(color), 0, text.length(),
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-thinking.append(ssb);
-```
-
-**Files to modify**:
-- `DroidFish.java` — rewrite `updateThinkingInfo()` to use SpannableStringBuilder
-
-### Fix 3: Move PV formatting to background thread
-**Target**: `DroidChessController.java` — `notifyPV()` method
-
-The Position copy + makeMove() loop for formatting PV strings should run on
-the engine's background thread, not in the callback that bridges to the UI.
-
-```java
-// BEFORE (in SearchListener.notifyPV):
-// ... format PV string with Position copies and makeMove() ...
-gui.runOnUIThread(() -> setThinkingInfo(ti));
-
-// AFTER:
-// Format PV string here (already on engine thread) — this is fine,
-// the issue is that setSearchInfo() does formatting AND posts.
-// Move the formatting into the SearchListener callback (engine thread)
-// and only post the pre-formatted result to UI.
-```
-
-Specifically: pre-format the PV display strings in `notifyPV()` (which runs
-on the engine thread) and store them as plain Strings in `ThinkingInfo`.
-The UI thread then only needs to apply spans/colors — no chess logic.
-
-**Files to modify**:
-- `DroidChessController.java` — restructure `notifyPV()` and `setSearchInfo()`
-- `ThinkingInfo.java` (or inner class) — carry pre-formatted strings
-
-### Fix 4: Sync animation to display refresh rate
-**Target**: `ChessBoard.java` — animation timing
-
-Replace the hardcoded 10ms `postDelayed` with Android's `Choreographer` to
-sync animation frames to the display's vsync signal.
-
-```java
-// BEFORE:
-long delay = 10 - (now2 - now);
-if (delay < 1) delay = 1;
-handlerTimer.postDelayed(ChessBoard.this::invalidate, delay);
-
-// AFTER:
-private final Choreographer choreographer = Choreographer.getInstance();
-private final Choreographer.FrameCallback animCallback = frameTimeNanos -> {
-    if (anim.isRunning()) {
-        invalidate();
-        choreographer.postFrameCallback(animCallback);
-    }
-};
-// Start animation:
-choreographer.postFrameCallback(animCallback);
-```
-
-This renders exactly once per vsync (60fps = 16.7ms) instead of busy-looping,
-reducing CPU usage and eliminating frame timing mismatches.
-
-**Files to modify**:
-- `ChessBoard.java` — replace `handlerTimer.postDelayed` animation loop
-
-### Fix 5: Synchronize position access in animation
-**Target**: `ChessBoard.java` — `MoveAnimation` inner class
-
-Make the position reference used by the animation thread-safe.
-
-```java
-// BEFORE:
-return !paused && startTime >= 0 && now < stopTime && posHash == pos.zobristHash();
-
-// AFTER:
-private volatile long animPosHash;  // Set when animation starts
-// In setAnimation():
-animPosHash = pos.zobristHash();
-// In isRunning():
-return !paused && startTime >= 0 && now < stopTime && posHash == animPosHash;
-```
-
-By capturing the hash at animation start and comparing against that snapshot
-(rather than re-reading a potentially mutated `pos`), we eliminate the race.
-
-**Files to modify**:
-- `ChessBoard.java` — capture position hash at animation start
-
-### Fix 6: Enable hardware acceleration
-**Target**: `ChessBoard.java` or `AndroidManifest.xml`
-
-Ensure hardware-accelerated rendering is active for the board view.
-
-```java
-// In ChessBoard constructor or onAttachedToWindow():
-setLayerType(View.LAYER_TYPE_HARDWARE, null);
-```
-
-Or in the manifest (likely already enabled by default for API 14+, but verify):
-```xml
-<application android:hardwareAccelerated="true" ... >
-```
-
-**Files to modify**:
-- `ChessBoard.java` — add `setLayerType` call, OR
-- `AndroidManifest.xml` — verify `hardwareAccelerated="true"`
-
-## Implementation Order & Status
-
-Fixes are ordered by impact and independence:
+## Implementation Status
 
 | Order | Fix | Impact | Risk | Status |
 |-------|-----|--------|------|--------|
-| 1 | Fix 1: Throttle UI updates | Critical | Low | **Done** |
-| 2 | Fix 2: Replace Html.fromHtml | Critical | Low | **Done** |
-| 3 | Fix 4: Vsync animation | Major | Low | **Done** |
-| 4 | Fix 5: Position race condition | Major | Low | **Done** |
-| 5 | Fix 3: Background PV formatting | Major | Medium | Open (depends on Fix 1) |
-| 6 | Fix 6: Hardware acceleration | Moderate | Low | **Done** |
+| 1 | Throttle UI updates | Critical | Low | **Done** |
+| 2 | Replace Html.fromHtml | Critical | Low | **Done** |
+| 3 | Background PV formatting | Major | Medium | Deferred (mitigated by Fix 1) |
+| 4 | Vsync animation | Major | Low | **Done** |
+| 5 | Position race condition | Major | Low | **Done** |
+| 6 | Hardware acceleration | Moderate | Low | **Done** |
+| 7 | Animation terminal frame | Major | Low | **Done** |
+| 8 | Animation timer start | Major | Low | **Done** |
 
-### Changes Made
+## Changes Made
 
 **Fix 1** (`DroidChessController.java`): Added `UI_UPDATE_INTERVAL_MS = 100` throttle
 to `setSearchInfo()`. Only posts to UI thread if 100ms+ elapsed since last post.
 `clearSearchInfo()` resets the timer to force immediate updates on search clear.
+
+**Important caveat**: The throttle introduced a secondary bug where book/explorer
+updates were also throttled, causing book hints to disappear (see Fix 1b below).
+
+**Fix 1b** (`DroidChessController.java`): `notifyBookInfo()` now resets
+`lastUIUpdateTime = 0` before calling `setSearchInfo()`, forcing book/explorer
+updates to bypass the 100ms throttle. Without this, the sequence was:
+1. `clearSearchInfo()` posts empty book state immediately (resets timer)
+2. `updateBookHints()` calls `notifyBookInfo()` a few ms later
+3. `setSearchInfo()` throttles the update (within 100ms window)
+4. With engine off, no later callback flushes the pending data
+
+Result: book arrows and text vanished permanently after the first move.
 
 **Fix 2** (`DroidFish.java`): Added `styledText()` helper that parses `<b>` and `<br>`
 tags directly into `SpannableStringBuilder` with `StyleSpan(BOLD)`. Replaced all 4
@@ -252,38 +129,80 @@ Added `animFrameCallbackActive` guard to prevent duplicate callbacks.
 **Fix 6** (`AndroidManifest.xml`): Added `android:hardwareAccelerated="true"` to the
 application element.
 
+**Fix 7** (`ChessBoard.java`): The Choreographer callback now always requests one
+final redraw after the animation window closes. Before this fix, when
+`isRunning()` returned false at the end of the animation, no more frames were
+scheduled. The piece remained at its last intermediate position until an
+unrelated `invalidate()` triggered a repaint — matching the "piece hangs
+partway and settles after extra taps" report.
+
+**Fix 8** (`ChessBoard.java`): Added `animDuration` field to `AnimInfo`.
+`setAnimMove()` now stores the duration without starting the timer.
+`setPosition()` starts the timer (`startTime = now`, `stopTime = now + duration`)
+when it unpauses the animation. This ensures the full animation duration is
+available for rendering, regardless of delay between the two calls.
+
+## Interaction Between Fixes
+
+The throttle (Fix 1) and book display (Fix 1b) interact in a subtle way that
+is important for future maintainers:
+
+```
+SearchListener callback flow:
+
+  notifyPV/notifyStats/notifyCurrMove/notifyDepth
+      → setSearchInfo(id)
+          → if (now - lastUIUpdateTime >= 100ms)
+                post to UI thread              ← THROTTLED (10/sec max)
+
+  notifyBookInfo
+      → lastUIUpdateTime = 0                   ← BYPASS THROTTLE
+      → setSearchInfo(id)
+          → posts immediately (timer was reset)
+
+  clearSearchInfo
+      → lastUIUpdateTime = 0                   ← FORCE IMMEDIATE
+      → setSearchInfo(id)
+          → posts immediately
+```
+
+If a new callback type is added that should always reach the UI (like book info),
+it must reset `lastUIUpdateTime = 0` before calling `setSearchInfo()`.
+
 ## Testing
 
 ### Manual testing
 - Open DroidFish, start analysis with Stockfish multiPV=3
 - Make moves rapidly while engine is analyzing
 - Monitor for smooth animation and responsive UI
+- Verify book arrows stay visible with engine off
 - Test on low-end device if available
-
-### Measurable metrics
-- Frame render time: should stay under 16ms (use Android GPU profiling)
-- UI thread message queue: should not accumulate backlog
-- Animation smoothness: consistent 60fps during move animation
 
 ### Regression checks
 - Engine analysis display still updates (not frozen by over-throttling)
 - PV lines display correctly (no formatting errors from SpannableString change)
-- Move animation still plays (Choreographer change doesn't break timing)
+- Move animation completes fully (piece reaches final square)
+- Animation starts from the origin square (no mid-air jumps)
 - Analysis info is current (throttled updates still show latest data)
+- Book hints persist across moves when engine is off
+- Book hints show alongside engine analysis when book is enabled
 
-### Automated test results (verified 2026-04-06)
-
-All fixes verified via compilation and test suites:
+### Automated test results (verified 2026-04-07)
 
 | Test Suite | Result | Notes |
 |---|---|---|
-| DroidFish JVM unit tests | 60/60 pass | testSpinOptionBounds fixed (was pre-existing) |
+| DroidFish JVM unit tests | 61/61 pass | testSpinOptionBounds + testDisabledWithoutToken added |
 | DroidFish instrumented tests | 70/73 pass | 3 failures are env-specific (missing book/tablebase on emulator) |
 | Android emulator engine validation | 24/24 pass | Stockfish 18, Rodent IV, Patricia all validated |
 | QA server integration + E2E | 54/54 pass | 2 xfail (known SessionManager limitation) |
 | QA stress tests | 8/8 pass | Concurrent clients, sustained sessions, throughput |
 | Compilation | Clean | Forward reference in ChessBoard.java caught and fixed |
 
-**Compilation fix applied during testing**: The vsync animation fix (Fix 4) introduced an
-illegal forward reference — `animFrameCallback` referenced the `anim` field before its
-declaration. Fixed by moving the `AnimInfo anim` field declaration before the callback.
+### Compilation fixes applied during development
+
+1. The vsync animation fix (Fix 4) introduced an illegal forward reference —
+   `animFrameCallback` referenced the `anim` field before its declaration.
+   Fixed by moving the `AnimInfo anim` field declaration before the callback.
+
+2. The `buildBook` Gradle task was running `chess.Book.main2()` at configuration
+   time (outside `doLast`), causing build failures. Fixed by wrapping in `doLast`.

@@ -299,6 +299,19 @@ See [`qa/README.md`](qa/README.md) for full documentation.
 - [x] SAF migration for PGN files (content:// URI support)
 - [x] Docker support (Dockerfile + docker-compose.yml)
 
+### Phase 2b: Performance & Polish - COMPLETE
+- [x] FPS fix: throttle engine UI updates to 10/sec (100ms coalescing)
+- [x] FPS fix: replace Html.fromHtml() with direct SpannableStringBuilder
+- [x] FPS fix: vsync animation via Choreographer (replaces 10ms busy-loop)
+- [x] FPS fix: eliminate race condition on position during animation
+- [x] FPS fix: animation terminal frame + deferred timer start
+- [x] FPS fix: explicit hardware acceleration in manifest
+- [x] Opening book: restore internal book.bin (generated from eco.pgn, 500+ lines)
+- [x] Opening book: fix book hints disappearing after throttle regression
+- [x] Lichess Explorer: add API token authentication (required since Feb 2026)
+- [x] Rodent IV engine upgrade with Chess960 + new personalities
+- [x] QA test suite: 93 tests (integration, e2e, stress, error, Android emulator)
+
 ### Phase 3: Enhanced Features - OPEN
 - [ ] REST API for server monitoring and management
 - [ ] Web-based admin dashboard for Chess-UCI-Server
