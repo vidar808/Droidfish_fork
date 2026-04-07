@@ -923,6 +923,11 @@ public class DroidChessController {
             bookMoves = moveList;
             this.eco = eco;
             this.distToEcoTree = distToEcoTree;
+            // Book/explorer updates often happen immediately after clearSearchInfo().
+            // If we let them go through the normal throttle window, the clear can win
+            // and the UI may never receive the replacement book hints when no engine
+            // search callbacks follow (for example with engine off).
+            lastUIUpdateTime = 0;
             setSearchInfo(id);
         }
 
