@@ -90,7 +90,17 @@ task buildEco {
     def b = "DroidFishApp/src/main/assets/eco.dat"
     chess.EcoBuilder.main2(a, b)
 }
+
+// Build the bundled internal opening book from book.txt (upstream CuckooChess format).
+task buildBook {
+    doLast {
+        def a = "buildSrc/src/main/java/chess/book.txt"
+        def b = "DroidFishApp/src/main/assets/book.bin"
+        chess.Book.main2(a, b)
+    }
+}
 preBuild.dependsOn buildEco
+preBuild.dependsOn buildBook
 
 // Copy engine executables to jniLibs as lib*.so so Android extracts them
 // to nativeLibraryDir (which has execute permission on Android 10+)

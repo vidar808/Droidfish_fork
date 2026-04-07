@@ -63,6 +63,7 @@ public class OpeningExplorerActivity extends Activity {
     private int currentIndex;
 
     private String playerName = "";
+    private String apiToken = "";
     private boolean boardFlipped = false;
     private int selectedDbIndex = 0;
 
@@ -101,6 +102,9 @@ public class OpeningExplorerActivity extends Activity {
         playerName = getIntent().getStringExtra("playerName");
         if (playerName == null)
             playerName = "";
+        apiToken = getIntent().getStringExtra("lichessApiToken");
+        if (apiToken == null)
+            apiToken = "";
         boardFlipped = getIntent().getBooleanExtra("flipped", false);
         board.setFlipped(boardFlipped);
 
@@ -214,6 +218,7 @@ public class OpeningExplorerActivity extends Activity {
         outState.putBoolean("flipped", boardFlipped);
         outState.putInt("dbIndex", selectedDbIndex);
         outState.putString("playerName", playerName);
+        outState.putString("apiToken", apiToken);
         ArrayList<String> fens = new ArrayList<>();
         for (Position p : posHistory)
             fens.add(TextIO.toFEN(p));
@@ -233,6 +238,7 @@ public class OpeningExplorerActivity extends Activity {
         boardFlipped = savedInstanceState.getBoolean("flipped", false);
         board.setFlipped(boardFlipped);
         playerName = savedInstanceState.getString("playerName", "");
+        apiToken = savedInstanceState.getString("apiToken", "");
         selectedDbIndex = savedInstanceState.getInt("dbIndex", 0);
         updateTabAppearance();
 
@@ -288,6 +294,7 @@ public class OpeningExplorerActivity extends Activity {
         opts.lichessExplorerEnabled = true;
         opts.lichessExplorerDb = db;
         opts.lichessPlayerName = playerName;
+        opts.lichessApiToken = apiToken;
         explorerBook.setOptions(opts);
     }
 

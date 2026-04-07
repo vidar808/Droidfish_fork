@@ -58,6 +58,7 @@ public class LichessExplorerBook implements IOpeningBook {
     private boolean explorerEnabled = false;
     private String database = "masters";
     private String playerName = "";
+    private String apiToken = "";
 
     // Cache: FEN (without move counters) -> ExplorerResult
     private final Map<String, ExplorerResult> cache;
@@ -145,9 +146,11 @@ public class LichessExplorerBook implements IOpeningBook {
 
     @Override
     public void setOptions(BookOptions options) {
-        this.explorerEnabled = options.lichessExplorerEnabled;
+        this.explorerEnabled = options.lichessExplorerEnabled
+                               && !options.lichessApiToken.isEmpty();
         this.database = options.lichessExplorerDb;
         this.playerName = options.lichessPlayerName;
+        this.apiToken = options.lichessApiToken;
     }
 
     /**
@@ -348,6 +351,9 @@ public class LichessExplorerBook implements IOpeningBook {
             conn.setReadTimeout(Math.min(timeoutMs, READ_TIMEOUT_MS));
             conn.setRequestProperty("Accept", "application/json");
             conn.setRequestProperty("User-Agent", "DroidFish/1.90");
+            if (!apiToken.isEmpty()) {
+                conn.setRequestProperty("Authorization", "Bearer " + apiToken);
+            }
 
             lastRequestTimeMs = System.currentTimeMillis();
 

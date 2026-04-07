@@ -1326,7 +1326,9 @@ public class DroidFish extends AppCompatActivity
         bookOptions.preferMainLines = settings.getBoolean("bookPreferMainLines", false);
         bookOptions.tournamentMode = settings.getBoolean("bookTournamentMode", false);
         bookOptions.random = (settings.getInt("bookRandom", 500) - 500) * (3.0 / 500);
-        bookOptions.lichessExplorerEnabled = settings.getBoolean("lichessExplorer", true);
+        bookOptions.lichessApiToken = settings.getString("lichessApiToken", "");
+        bookOptions.lichessExplorerEnabled = settings.getBoolean("lichessExplorer", false)
+                                             && !bookOptions.lichessApiToken.isEmpty();
         bookOptions.lichessExplorerDb = settings.getString("lichessExplorerDb", "masters");
         bookOptions.lichessPlayerName = settings.getString("lichessPlayerName", "");
         setBookOptions();
@@ -1741,9 +1743,15 @@ public class DroidFish extends AppCompatActivity
                 reShowDialog(SELECT_BOOK_DIALOG);
             break;
         case OPENING_EXPLORER: {
+            if (bookOptions.lichessApiToken.isEmpty()) {
+                DroidFishApp.toast(R.string.explorer_api_token_required,
+                                   android.widget.Toast.LENGTH_LONG);
+                break;
+            }
             Intent i = new Intent(DroidFish.this, OpeningExplorerActivity.class);
             i.putExtra("lichessDb", bookOptions.lichessExplorerDb);
             i.putExtra("playerName", bookOptions.lichessPlayerName);
+            i.putExtra("lichessApiToken", bookOptions.lichessApiToken);
             i.putExtra("flipped", boardFlipped);
             startActivity(i);
             break;

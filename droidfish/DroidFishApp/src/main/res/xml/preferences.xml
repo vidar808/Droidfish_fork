@@ -559,11 +559,19 @@
             android:key="bookSettings"
             android:title="@string/prefs_bookSettings_title"
             android:summary="@string/prefs_bookSettings_summary">
+            <EditTextPreference
+                android:key="lichessApiToken"
+                android:title="@string/prefs_lichessApiToken_title"
+                android:summary="@string/prefs_lichessApiToken_summary"
+                android:defaultValue=""
+                android:inputType="textPassword">
+            </EditTextPreference>
             <CheckBoxPreference
                 android:key="lichessExplorer"
                 android:title="@string/prefs_lichessExplorer_title"
                 android:summary="@string/prefs_lichessExplorer_summary"
-                android:defaultValue="true">
+                android:defaultValue="false"
+                android:dependency="lichessApiToken">
             </CheckBoxPreference>
             <EditTextPreference
                 android:key="lichessPlayerName"

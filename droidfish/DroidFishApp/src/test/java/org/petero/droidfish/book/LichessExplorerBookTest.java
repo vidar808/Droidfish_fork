@@ -216,9 +216,21 @@ public class LichessExplorerBookTest {
         opts.lichessExplorerEnabled = true;
         opts.lichessExplorerDb = "lichess";
         opts.lichessPlayerName = "testuser";
+        opts.lichessApiToken = "lip_test_token_123";
         book.setOptions(opts);
 
         assertTrue(book.enabled());
+    }
+
+    @Test
+    public void testDisabledWithoutToken() {
+        LichessExplorerBook book = new LichessExplorerBook();
+        BookOptions opts = new BookOptions();
+        opts.lichessExplorerEnabled = true;
+        opts.lichessApiToken = "";  // no token
+        book.setOptions(opts);
+
+        assertFalse(book.enabled());
     }
 
     @Test

@@ -27,9 +27,10 @@ public final class BookOptions {
     public boolean tournamentMode = false;
     public double random = 0; // Scale probabilities according to p^(exp(-random))
 
-    public boolean lichessExplorerEnabled = true;
+    public boolean lichessExplorerEnabled = false;
     public String lichessExplorerDb = "masters";  // "masters", "lichess", "player"
     public String lichessPlayerName = "";
+    public String lichessApiToken = "";  // Personal API token from lichess.org/account/oauth/token
 
     public BookOptions() { }
 
@@ -42,6 +43,7 @@ public final class BookOptions {
         lichessExplorerEnabled = other.lichessExplorerEnabled;
         lichessExplorerDb = other.lichessExplorerDb;
         lichessPlayerName = other.lichessPlayerName;
+        lichessApiToken = other.lichessApiToken;
     }
 
     @Override
@@ -57,7 +59,8 @@ public final class BookOptions {
                 (random == other.random) &&
                 (lichessExplorerEnabled == other.lichessExplorerEnabled) &&
                 (lichessExplorerDb.equals(other.lichessExplorerDb)) &&
-                (lichessPlayerName.equals(other.lichessPlayerName)));
+                (lichessPlayerName.equals(other.lichessPlayerName)) &&
+                (lichessApiToken.equals(other.lichessApiToken)));
     }
 
     @Override

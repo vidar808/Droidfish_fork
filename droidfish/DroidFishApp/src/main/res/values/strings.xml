@@ -175,8 +175,10 @@ If you are running on battery power, it is recommended that you change settings 
     <string name="resign_white">Game over, white resigns!</string>
     <string name="resign_black">Game over, black resigns!</string>
     <string name="book">Book:</string>
+    <string name="prefs_lichessApiToken_title">Lichess API Token</string>
+    <string name="prefs_lichessApiToken_summary">Personal access token from lichess.org/account/oauth/token (required for explorer)</string>
     <string name="prefs_lichessExplorer_title">Lichess Opening Explorer</string>
-    <string name="prefs_lichessExplorer_summary">Use online Lichess database for opening moves (requires internet). When enabled, takes precedence over the local opening book.</string>
+    <string name="prefs_lichessExplorer_summary">Use online Lichess database for opening moves. Requires API token above.</string>
     <string name="prefs_lichessExplorerDb_title">Explorer Database</string>
     <string name="prefs_lichessExplorerDb_summary">Select which game database to query</string>
     <string name="prefs_lichessPlayerName_title">Lichess Username</string>
@@ -862,6 +864,7 @@ If you are running on battery power, it is recommended that you change settings 
     <string name="opening_explorer_title">Opening Explorer</string>
     <string name="explorer_loading">Loading\u2026</string>
     <string name="explorer_no_data">No games found for this position</string>
+    <string name="explorer_api_token_required">Lichess API token required. Set it in Settings → Opening Book Settings.</string>
     <string name="explorer_player_name_required">Set a Lichess username in Settings \u2192 Opening Book to use Player database</string>
     <string name="explorer_db_masters">Masters</string>
     <string name="explorer_db_lichess">Lichess</string>
