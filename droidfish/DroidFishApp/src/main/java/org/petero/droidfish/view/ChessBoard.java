@@ -149,20 +149,26 @@ public abstract class ChessBoard extends View {
     private boolean animFrameCallbackActive = false;
     private final Choreographer.FrameCallback animFrameCallback = frameTimeNanos -> {
         animFrameCallbackActive = false;
-        if (anim.isRunning()) {
+        if (anim.startTime >= 0 && !anim.paused) {
+            // Always request one final redraw after the animation window closes,
+            // otherwise the piece can remain visible at an intermediate position
+            // until some unrelated invalidate happens later.
             invalidate();
-            animFrameCallbackActive = true;
-            choreographer.postFrameCallback(this.animFrameCallback);
+            if (anim.isRunning()) {
+                animFrameCallbackActive = true;
+                choreographer.postFrameCallback(this.animFrameCallback);
+            }
         }
     };
 
     private final class AnimInfo {
         AnimInfo() { startTime = -1; }
         boolean paused;
-        long posHash;   // Position hash captured at animation start
-        long startTime; // Time in milliseconds when animation was started
-        long stopTime;  // Time in milliseconds when animation should stop
-        long now;       // Current time in milliseconds
+        long posHash;      // Position hash captured at animation start
+        int animDuration;  // Duration in milliseconds (set by setAnimMove)
+        long startTime;    // Time in milliseconds when animation was started
+        long stopTime;     // Time in milliseconds when animation should stop
+        long now;          // Current time in milliseconds
         int piece1, from1, to1, hide1;
         int piece2, from2, to2, hide2;
 
@@ -242,8 +248,8 @@ public abstract class ChessBoard extends View {
             animTime = (int)Math.round(t);
         }
         if (animTime > 0) {
-            anim.startTime = System.currentTimeMillis();
-            anim.stopTime = anim.startTime + animTime;
+            anim.animDuration = animTime;
+            anim.startTime = -1; // Will be set when animation is unpaused
             anim.piece2 = Piece.EMPTY;
             anim.from2 = -1;
             anim.to2 = -1;
@@ -314,6 +320,12 @@ public abstract class ChessBoard extends View {
         boolean doInvalidate = false;
         if (anim.paused) {
             anim.paused = false;
+            // Start the animation timer NOW, not when setAnimMove() was called.
+            // This prevents frames being lost to the delay between the two calls.
+            if (anim.animDuration > 0) {
+                anim.startTime = System.currentTimeMillis();
+                anim.stopTime = anim.startTime + anim.animDuration;
+            }
             doInvalidate = true;
         }
         if (!this.pos.equals(pos)) {

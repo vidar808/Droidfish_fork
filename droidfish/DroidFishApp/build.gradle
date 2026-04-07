@@ -91,12 +91,29 @@ task buildEco {
     chess.EcoBuilder.main2(a, b)
 }
 
-// Build the bundled internal opening book from book.txt (upstream CuckooChess format).
+// Build the bundled internal opening book from the move text in eco.pgn.
 task buildBook {
+    def src = rootProject.file("buildSrc/src/main/java/chess/eco.pgn")
+    def tmp = file("$buildDir/generated/book/book.txt")
+    def out = rootProject.file("DroidFishApp/src/main/assets/book.bin")
+    outputs.file(out)
     doLast {
-        def a = "buildSrc/src/main/java/chess/book.txt"
-        def b = "DroidFishApp/src/main/assets/book.bin"
-        chess.Book.main2(a, b)
+        tmp.parentFile.mkdirs()
+        tmp.withWriter("UTF-8") { writer ->
+            src.eachLine("UTF-8") { line ->
+                if (!line.startsWith("[") && !line.trim().isEmpty()) {
+                    String normalized = line
+                            .replaceAll(/\s+\*$/, "")
+                            .replaceAll(/\s+1-0$/, "")
+                            .replaceAll(/\s+0-1$/, "")
+                            .replaceAll(/\s+1\/2-1\/2$/, "")
+                            .trim()
+                    if (!normalized.isEmpty())
+                        writer.write(normalized + "\n")
+                }
+            }
+        }
+        chess.Book.main2(tmp.path, out.path)
     }
 }
 preBuild.dependsOn buildEco
