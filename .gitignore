@@ -45,3 +45,4 @@ chess-uci-server/deploy/linux/*.chessuci
 # QA runtime artifacts
 qa/.pytest_cache/
 qa/fixtures/certs/*.pem
+CLAUDE.md
