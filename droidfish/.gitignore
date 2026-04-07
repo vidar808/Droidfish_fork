@@ -1,0 +1,23 @@
+*.iml
+.gradle
+.idea
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+/release
+*~
+
+# Engine binaries (built from source during Gradle build)
+DroidFishApp/src/main/jniLibs/
+DroidFishApp/src/main/assets/*/stockfish
+DroidFishApp/src/main/assets/*/stockfish_nosimd
+DroidFishApp/src/main/assets/*/rodent4
+DroidFishApp/src/main/assets/*/patricia

@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  chess-uci-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chess-uci-server
+    restart: unless-stopped
+    ports:
+      - "9998:9998"
+      # Add more ports for additional engines:
+      # - "9999:9999"
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - chess-data:/app/data
+      # Mount TLS certs (if using TLS):
+      # - ./certs:/app/certs:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    # For mDNS/UPnP to work, use host network:
+    # network_mode: host
+
+  # Optional: standalone relay server for NAT traversal
+  # Deploy on a VPS with a public IP
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chess-relay
+    restart: unless-stopped
+    ports:
+      - "19000:19000"
+    entrypoint: ["python", "relay_server.py", "--port", "19000"]
+    profiles:
+      - relay
+
+volumes:
+  chess-data:

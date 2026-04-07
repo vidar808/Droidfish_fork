@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Pytest
+.pytest_cache/
+
+# Local configuration (machine-specific; use example_config.json as template)
+config.json
+
+# Runtime artifacts
+*.pid
+*.log
+*.chessuci
+
+# TLS certificates (generated locally)
+*.pem
+*.crt
+*.key
+
+# Engine binaries
+deploy/linux/engines/*
+deploy/windows/engines/*
+!deploy/linux/engines/README.md
+!deploy/windows/engines/README.md

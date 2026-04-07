@@ -1,0 +1,54 @@
+{
+  "_comment": "Quick-deploy config. Drop engines into deploy\\windows\\engines\\ and run: python chess.py --pair",
+
+  "host": "0.0.0.0",
+  "base_port": 9998,
+  "max_connections": 10,
+
+  "enable_single_port": true,
+  "enable_mdns": true,
+  "enable_upnp": true,
+  "enable_auto_trust": true,
+  "enable_trusted_sources": false,
+
+  "engine_directory": "engines",
+  "engines": {},
+
+  "enable_server_log": true,
+  "enable_uci_log": false,
+  "base_log_dir": "",
+  "display_uci_communication": true,
+  "detailed_log_verbosity": false,
+
+  "enable_tls": false,
+  "tls_cert_path": "",
+  "tls_key_path": "",
+  "auth_token": "",
+  "auth_method": "none",
+  "psk_key": "",
+
+  "pid_file": "chess-uci-server.pid",
+  "connection_file_path": "connection.chessuci",
+  "server_secret": "",
+  "relay_server_url": "",
+  "relay_server_port": 19000,
+
+  "trusted_sources": [],
+  "trusted_subnets": [],
+
+  "custom_variables": {},
+  "inactivity_timeout": 900,
+  "heartbeat_time": 300,
+  "watchdog_timer_interval": 300,
+  "session_keepalive_timeout": 0,
+  "info_throttle_ms": 0,
+
+  "enable_firewall_rules": false,
+  "enable_firewall_subnet_blocking": false,
+  "enable_firewall_ip_blocking": false,
+  "max_connection_attempts": 5,
+  "connection_attempt_period": 3600,
+  "enable_subnet_connection_attempt_blocking": false,
+  "max_connection_attempts_from_untrusted_subnet": 10,
+  "Log_untrusted_connection_attempts": true
+}

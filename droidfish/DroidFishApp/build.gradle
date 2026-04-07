@@ -1,0 +1,124 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace "org.petero.droidfish"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "org.petero.droidfish.custom"
+        minSdk 21
+        targetSdk 34
+        versionCode 100
+        versionName "1.90-custom"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            ndkBuild {
+                arguments '-j8'
+            }
+        }
+    }
+
+    if(project.hasProperty("RELEASE_STORE_FILE")) {
+        signingConfigs {
+            release {
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if(project.hasProperty("RELEASE_STORE_FILE")) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path file('src/main/cpp/Android.mk')
+        }
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    lint {
+        abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
+    buildFeatures {
+        dataBinding true
+        buildConfig true
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
+    testImplementation 'junit:junit:4.13'
+    testImplementation 'org.mockito:mockito-core:5.7.0'
+    testImplementation 'org.json:json:20231013'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.5.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.1'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+
+    implementation 'com.caverock:androidsvg-aar:1.4'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+}
+
+// Build the ECO database
+task buildEco {
+    def a = "buildSrc/src/main/java/chess/eco.pgn"
+    def b = "DroidFishApp/src/main/assets/eco.dat"
+    chess.EcoBuilder.main2(a, b)
+}
+preBuild.dependsOn buildEco
+
+// Copy engine executables to jniLibs as lib*.so so Android extracts them
+// to nativeLibraryDir (which has execute permission on Android 10+)
+task copyToJniLibs(dependsOn: 'externalNativeBuildRelease') {
+    doLast {
+        def abis = ['arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64']
+        def baseDir = file('build/intermediates/ndkBuild/release/obj/local')
+        abis.each { abi ->
+            def srcDir = new File(baseDir, abi)
+            def dstDir = file("src/main/jniLibs/${abi}")
+            dstDir.mkdirs()
+            ['stockfish', 'stockfish_nosimd', 'rodent4', 'patricia'].each { name ->
+                def src = new File(srcDir, name)
+                if (src.exists()) {
+                    def dst = new File(dstDir, "lib${name}.so")
+                    dst.bytes = src.bytes
+                }
+            }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn copyToJniLibs
+}
+android {
+  applicationVariants.all { variant ->
+    tasks["merge${variant.name.capitalize()}JniLibFolders"]
+      .dependsOn(copyToJniLibs)
+  }
+}

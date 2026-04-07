@@ -1,0 +1,47 @@
+# System and tool directories
+.android-sdk/
+.codex
+.claude/
+.hypothesis/
+
+# Android / Gradle
+*.iml
+.gradle/
+.idea/
+.DS_Store
+.externalNativeBuild/
+*~
+local.properties
+
+# Build outputs
+droidfish/build/
+droidfish/DroidFishApp/build/
+droidfish/buildSrc/build/
+droidfish/captures/
+droidfish/release/
+
+# Engine binaries (built from source during Gradle build)
+droidfish/DroidFishApp/src/main/jniLibs/
+droidfish/DroidFishApp/src/main/assets/*/stockfish
+droidfish/DroidFishApp/src/main/assets/*/stockfish_nosimd
+droidfish/DroidFishApp/src/main/assets/*/rodent4
+droidfish/DroidFishApp/src/main/assets/*/patricia
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Chess-UCI-Server runtime files
+chess-uci-server/config.json
+chess-uci-server/deploy/linux/config.json
+chess-uci-server/deploy/windows/config.json
+chess-uci-server/deploy/linux/*.pid
+chess-uci-server/deploy/linux/*.log
+chess-uci-server/deploy/linux/certs/
+chess-uci-server/deploy/linux/*.chessuci
+
+# QA runtime artifacts
+qa/.pytest_cache/
+qa/fixtures/certs/*.pem
