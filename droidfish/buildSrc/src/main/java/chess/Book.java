@@ -79,6 +79,13 @@ public class Book {
         UndoInfo ui = new UndoInfo();
         String[] strMoves = line.split(" ");
         for (String strMove : strMoves) {
+            if (strMove.isEmpty()) {
+                continue;
+            }
+            if ("*".equals(strMove) || "1-0".equals(strMove) ||
+                    "0-1".equals(strMove) || "1/2-1/2".equals(strMove)) {
+                break;
+            }
 //            System.out.printf("Adding move:%s\n", strMove);
             int bad = 0;
             if (strMove.endsWith("?")) {

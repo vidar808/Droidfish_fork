@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.petero.droidfish.DroidFishApp;
 import org.petero.droidfish.book.DroidBook.BookEntry;
 import org.petero.droidfish.gamelogic.ChessParseError;
 import org.petero.droidfish.gamelogic.Move;
@@ -81,9 +82,7 @@ final class InternalBook implements IOpeningBook {
         bookMap = new HashMap<>();
         numBookMoves = 0;
         try {
-            InputStream inStream = getClass().getResourceAsStream("/book.bin");
-            if (inStream == null)
-                throw new IOException();
+            InputStream inStream = DroidFishApp.getContext().getAssets().open("book.bin");
             List<Byte> buf = new ArrayList<>(8192);
             byte[] tmpBuf = new byte[1024];
             while (true) {
