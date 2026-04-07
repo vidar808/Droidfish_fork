@@ -39,6 +39,7 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.view.Choreographer;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -143,23 +144,38 @@ public abstract class ChessBoard extends View {
     }
 
     private Handler handlerTimer = new Handler();
+    private final Choreographer choreographer = Choreographer.getInstance();
+    private boolean animFrameCallbackActive = false;
+    private final Choreographer.FrameCallback animFrameCallback = frameTimeNanos -> {
+        animFrameCallbackActive = false;
+        if (anim.isRunning()) {
+            invalidate();
+            animFrameCallbackActive = true;
+            choreographer.postFrameCallback(this.animFrameCallback);
+        }
+    };
 
     private final class AnimInfo {
         AnimInfo() { startTime = -1; }
         boolean paused;
-        long posHash;   // Position the animation is valid for
+        long posHash;   // Position hash captured at animation start
         long startTime; // Time in milliseconds when animation was started
         long stopTime;  // Time in milliseconds when animation should stop
         long now;       // Current time in milliseconds
         int piece1, from1, to1, hide1;
         int piece2, from2, to2, hide2;
 
+        /** Check if animation is still running. Thread-safe: compares against
+         *  the hash captured at animation start, not the live position. */
+        public final boolean isRunning() {
+            return !paused && startTime >= 0 && System.currentTimeMillis() < stopTime;
+        }
         public final boolean updateState() {
             now = System.currentTimeMillis();
             return animActive();
         }
         private boolean animActive() {
-            return !paused && startTime >= 0 && now < stopTime && posHash == pos.zobristHash();
+            return !paused && startTime >= 0 && now < stopTime;
         }
         public final boolean squareHidden(int sq) {
             if (!animActive())
@@ -172,11 +188,11 @@ public abstract class ChessBoard extends View {
             double animState = (now - startTime) / (double)(stopTime - startTime);
             drawAnimPiece(canvas, piece2, from2, to2, animState);
             drawAnimPiece(canvas, piece1, from1, to1, animState);
-            long now2 = System.currentTimeMillis();
-            long delay = 10 - (now2 - now);
-//          System.out.printf("delay:%d\n", delay);
-            if (delay < 1) delay = 1;
-            handlerTimer.postDelayed(ChessBoard.this::invalidate, delay);
+            // Schedule next frame via Choreographer (synced to display vsync)
+            if (!animFrameCallbackActive) {
+                animFrameCallbackActive = true;
+                choreographer.postFrameCallback(animFrameCallback);
+            }
         }
         private void drawAnimPiece(Canvas canvas, int piece, int from, int to, double animState) {
             if (piece == Piece.EMPTY)

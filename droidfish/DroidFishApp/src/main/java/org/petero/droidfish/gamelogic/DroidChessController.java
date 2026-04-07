@@ -709,6 +709,9 @@ public class DroidChessController {
 
     /** Engine search information receiver. */
     private final class SearchListener implements org.petero.droidfish.gamelogic.SearchListener {
+        private static final long UI_UPDATE_INTERVAL_MS = 100; // Coalesce UI updates
+        private long lastUIUpdateTime = 0;
+
         private int currDepth = 0;
         private int currMoveNr = 0;
         private Move currMove = null;
@@ -741,6 +744,7 @@ public class DroidChessController {
             bookMoves = null;
             eco = "";
             distToEcoTree = 0;
+            lastUIUpdateTime = 0; // Force immediate UI update on clear
             setSearchInfo(id);
         }
 
@@ -816,7 +820,14 @@ public class DroidChessController {
             ti.pvMoves = pvMoves;
             ti.bookMoves = bookMoves;
             latestThinkingInfo = ti;
-            gui.runOnUIThread(() -> setThinkingInfo(ti));
+            long now = System.currentTimeMillis();
+            if (now - lastUIUpdateTime >= UI_UPDATE_INTERVAL_MS) {
+                lastUIUpdateTime = now;
+                gui.runOnUIThread(() -> setThinkingInfo(ti));
+            }
+            // Intermediate updates are skipped; the next callback will pick up
+            // latestThinkingInfo. Final updates (depth completion, bestmove) are
+            // guaranteed because clearSearchInfo() always posts immediately.
         }
 
         private void appendWithPrefix(StringBuilder sb, long value) {

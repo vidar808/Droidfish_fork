@@ -64,6 +64,24 @@
 
 ---
 
+### 1.4 FPS Drop & Visual Glitching Fix
+
+**Priority**: P1 | **Effort**: Medium | **Impact**: Critical | **Status**: In Progress
+
+**Issue**: [vidar808/Droidfish_fork#1](https://github.com/vidar808/Droidfish_fork/issues/1) — visual glitching and FPS drops when making moves during engine analysis.
+
+See [`docs/fps-performance-fix.md`](fps-performance-fix.md) for the full diagnosis and fix plan covering:
+- Fix 1: Throttle SearchListener UI updates (coalesce to 100ms)
+- Fix 2: Replace Html.fromHtml() with SpannableStringBuilder
+- Fix 3: Move PV formatting to background thread
+- Fix 4: Sync animation to vsync via Choreographer
+- Fix 5: Synchronize position access in animation
+- Fix 6: Enable hardware acceleration
+
+**Key files**: `DroidChessController.java`, `DroidFish.java`, `ChessBoard.java`
+
+---
+
 ## Phase 2: Security & Reliability
 
 ### 2.1 TLS Encryption
@@ -272,6 +290,7 @@ See [`docs/chess960-enhancement.md`](chess960-enhancement.md) for the full imple
 
 | Task | Impact | Effort | Priority | Status |
 |------|--------|--------|----------|--------|
+| FPS/glitch fix (1.4) | Critical | Medium | P1 | In Progress — [details](fps-performance-fix.md) |
 | Server refactoring (1.1) | High | Medium | P1 | Mostly done (single-file remains) |
 | Cross-platform (1.2) | High | Medium | P1 | Done (Win + Noop; Linux/Mac pending) |
 | Testing (1.3) | High | Medium | P1 | **Done** (228 pytest + 3 JUnit) |

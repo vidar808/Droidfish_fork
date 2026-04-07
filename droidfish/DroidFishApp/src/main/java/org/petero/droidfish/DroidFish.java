@@ -128,6 +128,10 @@ import androidx.core.content.FileProvider;
 import androidx.drawerlayout.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.Html;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.StyleSpan;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Pair;
@@ -2155,6 +2159,35 @@ public class DroidFish extends AppCompatActivity
         return line.substring(0, maxLen);
     }
 
+    /** Build styled text from a string that may contain simple HTML tags (&lt;b&gt;, &lt;br&gt;).
+     *  Much faster than Html.fromHtml() since it avoids the full HTML parser. */
+    private static CharSequence styledText(String s) {
+        // Strip <br> → newline
+        s = s.replace("<br>", "\n").replace("<br/>", "\n");
+        // Handle <b>...</b> → bold spans
+        SpannableStringBuilder ssb = new SpannableStringBuilder();
+        int idx = 0;
+        while (idx < s.length()) {
+            int bStart = s.indexOf("<b>", idx);
+            if (bStart < 0) {
+                ssb.append(s, idx, s.length());
+                break;
+            }
+            ssb.append(s, idx, bStart);
+            int bEnd = s.indexOf("</b>", bStart + 3);
+            if (bEnd < 0) {
+                ssb.append(s, bStart + 3, s.length());
+                break;
+            }
+            int spanStart = ssb.length();
+            ssb.append(s, bStart + 3, bEnd);
+            ssb.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),
+                        spanStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            idx = bEnd + 4;
+        }
+        return ssb;
+    }
+
     private void updateThinkingInfo() {
         boolean thinkingEmpty = true;
         {
@@ -2191,26 +2224,26 @@ public class DroidFish extends AppCompatActivity
             !ecoInfoStr.isEmpty()) {
             String s = thinkingEmpty ? "" : "<br>";
             s += ecoInfoStr;
-            thinking.append(Html.fromHtml(s));
+            thinking.append(styledText(s));
             thinkingEmpty = false;
         }
         if (mShowBookHints && ctrl.humansTurn()) {
             if (!explorerInfoStr.isEmpty()) {
                 String s = thinkingEmpty ? "" : "<br>";
                 s += explorerInfoStr;
-                thinking.append(Html.fromHtml(s));
+                thinking.append(styledText(s));
                 thinkingEmpty = false;
             } else if (!bookInfoStr.isEmpty()) {
                 String s = thinkingEmpty ? "" : "<br>";
                 s += Util.boldStart + getString(R.string.book) + Util.boldStop + bookInfoStr;
-                thinking.append(Html.fromHtml(s));
+                thinking.append(styledText(s));
                 thinkingEmpty = false;
             }
         }
         if (showVariationLine && (variantStr.indexOf(' ') >= 0)) {
             String s = thinkingEmpty ? "" : "<br>";
             s += Util.boldStart + getString(R.string.variation) + Util.boldStop + variantStr;
-            thinking.append(Html.fromHtml(s));
+            thinking.append(styledText(s));
             thinkingEmpty = false;
         }
         thinking.setVisibility(thinkingEmpty ? View.GONE : View.VISIBLE);
