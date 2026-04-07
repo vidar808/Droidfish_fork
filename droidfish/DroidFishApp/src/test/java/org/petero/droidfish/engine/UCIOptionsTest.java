@@ -52,7 +52,7 @@ public class UCIOptionsTest {
         assertFalse(opt.set(129)); // above max
         assertEquals(1, opt.value);
 
-        assertTrue(opt.set(1));    // at min (but same as default)
+        assertFalse(opt.set(1));   // at min, but same as current value — no change
         assertFalse(opt.modified());
 
         assertTrue(opt.set(128)); // at max

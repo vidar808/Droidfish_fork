@@ -119,12 +119,12 @@ def _run_engine_with_go(engine_info, uci_commands, timeout=30):
     if engine_info["needs_nnue"]:
         # cd into NNUE dir; use sh -c to wrap the cd + engine for timeout
         shell_cmd = (
-            f'{{ echo -e "{uci_commands}"; sleep 10; echo quit; }} '
+            f'{{ echo -e "{uci_commands}"; sleep 20; echo quit; }} '
             f'| timeout {timeout} sh -c "cd {REMOTE_DIR} && ./{name}"'
         )
     else:
         shell_cmd = (
-            f'{{ echo -e "{uci_commands}"; sleep 10; echo quit; }} '
+            f'{{ echo -e "{uci_commands}"; sleep 20; echo quit; }} '
             f'| timeout {timeout} {remote}'
         )
 

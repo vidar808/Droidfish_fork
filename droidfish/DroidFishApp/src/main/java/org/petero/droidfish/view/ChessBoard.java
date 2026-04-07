@@ -145,6 +145,7 @@ public abstract class ChessBoard extends View {
 
     private Handler handlerTimer = new Handler();
     private final Choreographer choreographer = Choreographer.getInstance();
+    private AnimInfo anim = new AnimInfo();
     private boolean animFrameCallbackActive = false;
     private final Choreographer.FrameCallback animFrameCallback = frameTimeNanos -> {
         animFrameCallbackActive = false;
@@ -208,7 +209,6 @@ public abstract class ChessBoard extends View {
             drawPiece(canvas, xCrd, yCrd, piece);
         }
     }
-    private AnimInfo anim = new AnimInfo();
 
     /** Return true if piece has the same color as the side to move. */
     protected boolean myColor(int piece) {
