@@ -136,7 +136,7 @@ Complete reference of all user-configurable settings in DroidFish.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `guideShowOnStart` | Checkbox | `true` | Show startup tutorial |
+| `guideShowOnStart` | Checkbox | `true` | Show welcome tip on startup (points to About/manual) |
 
 ### 7a. Opening Book Settings (`bookSettings`)
 

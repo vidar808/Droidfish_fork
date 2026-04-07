@@ -344,10 +344,10 @@ On "Start Game", the dialog:
 - Import/export via FEN notation
 - Return to main activity with new position
 
-### Tour Guide
-- First-time user tutorial overlay
-- Explains left/right drawers, move list, thinking display
-- Can be re-enabled from Settings
+### Welcome Tip
+- Simple welcome dialog shown on first launch
+- Directs users to the About screen and full manual for help
+- Can be re-enabled from Settings > Other > Welcome Tip
 
 ### Game State Persistence
 - Auto-save on pause (SharedPreferences)
