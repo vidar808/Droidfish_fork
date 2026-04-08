@@ -196,7 +196,15 @@ public final class DroidBook {
             for (BookEntry be : bookMoves) {
                 Move m = be.move;
                 bookMoveList.add(m);
-                typeList.add(be.lineType);
+                // Only show gambit arrow color when the side to move matches the gambit color.
+                // e.g., White gambit arrows only when White moves, Black gambit only when Black moves.
+                // Mutual gambit arrows show for either side.
+                int effectiveType = be.lineType;
+                if (effectiveType == LINE_GAMBIT_WHITE && !pos.whiteMove)
+                    effectiveType = LINE_NORMAL;
+                else if (effectiveType == LINE_GAMBIT_BLACK && pos.whiteMove)
+                    effectiveType = LINE_NORMAL;
+                typeList.add(effectiveType);
                 String moveStr = TextIO.moveToString(pos, m, false, localized);
                 if (first)
                     first = false;
