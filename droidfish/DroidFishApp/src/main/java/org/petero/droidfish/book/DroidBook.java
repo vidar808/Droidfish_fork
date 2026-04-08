@@ -36,12 +36,31 @@ import org.petero.droidfish.gamelogic.TextIO;
 
 /** Implements an opening book. */
 public final class DroidBook {
+    /** Line type constants matching Book.java in buildSrc. */
+    public static final int LINE_NORMAL       = 0;
+    public static final int LINE_GAMBIT_WHITE  = 1;
+    public static final int LINE_GAMBIT_BLACK  = 2;
+    public static final int LINE_GAMBIT_MUTUAL = 3;
+
+    /** Quality constants matching Book.java in buildSrc. */
+    public static final int QUALITY_UNRATED  = 0;
+    public static final int QUALITY_MAINLINE = 1;
+    public static final int QUALITY_SIDELINE = 2;
+    public static final int QUALITY_DUBIOUS  = 3;
+
     static final class BookEntry {
         Move move;
         float weight;
+        int lineType;   // LINE_NORMAL, LINE_GAMBIT_WHITE, etc.
+        int quality;    // QUALITY_UNRATED, QUALITY_MAINLINE, etc.
         BookEntry(Move move) {
             this.move = move;
             weight = 1;
+            lineType = LINE_NORMAL;
+            quality = QUALITY_UNRATED;
+        }
+        boolean isGambit() {
+            return lineType != LINE_NORMAL;
         }
         @Override
         public String toString() {
@@ -57,6 +76,15 @@ public final class DroidBook {
     private IOpeningBook noBook = new NoBook();
     private LichessExplorerBook lichessBook = new LichessExplorerBook();
     private BookOptions options = null;
+
+    /** Gambit line types for the most recent getAllBookMoves() result.
+     *  Parallel array to the returned move list. null if no gambit info available. */
+    private int[] lastBookMoveTypes = null;
+
+    /** Get the gambit line types from the most recent getAllBookMoves() call. */
+    public int[] getLastBookMoveTypes() {
+        return lastBookMoveTypes;
+    }
 
     private static final DroidBook INSTANCE = new DroidBook();
 
@@ -127,12 +155,14 @@ public final class DroidBook {
         return bookMoves.get(nMoves-1).move;
     }
 
-    /** Return all book moves, both as a formatted string and as a list of moves. */
+    /** Return all book moves, both as a formatted string and as a list of moves.
+     *  Also populates lastBookMoveTypes with gambit line types (see getLastBookMoveTypes()). */
     public final synchronized Pair<String,ArrayList<Move>> getAllBookMoves(BookPosInput posInput,
                                                                            boolean localized) {
         Position pos = posInput.getCurrPos();
         StringBuilder ret = new StringBuilder();
         ArrayList<Move> bookMoveList = new ArrayList<>();
+        ArrayList<Integer> typeList = new ArrayList<>();
         ArrayList<BookEntry> bookMoves = getBook().getBookEntries(posInput);
         if (lichessBook.enabled() && (bookMoves == null || bookMoves.isEmpty()))
             bookMoves = getLocalBook().getBookEntries(posInput);
@@ -166,6 +196,7 @@ public final class DroidBook {
             for (BookEntry be : bookMoves) {
                 Move m = be.move;
                 bookMoveList.add(m);
+                typeList.add(be.lineType);
                 String moveStr = TextIO.moveToString(pos, m, false, localized);
                 if (first)
                     first = false;
@@ -178,6 +209,13 @@ public final class DroidBook {
                 int percent = (int)Math.round(scaleWeight(be.weight) * 100 / totalWeight);
                 ret.append(percent);
             }
+        }
+        if (!typeList.isEmpty()) {
+            lastBookMoveTypes = new int[typeList.size()];
+            for (int i = 0; i < typeList.size(); i++)
+                lastBookMoveTypes[i] = typeList.get(i);
+        } else {
+            lastBookMoveTypes = null;
         }
         return new Pair<>(ret.toString(), bookMoveList);
     }

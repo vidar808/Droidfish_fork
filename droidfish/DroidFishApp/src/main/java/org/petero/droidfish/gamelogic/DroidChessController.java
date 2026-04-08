@@ -727,6 +727,7 @@ public class DroidChessController {
         private String bookInfo = "";
         private String explorerInfo = "";
         private ArrayList<Move> bookMoves = null;
+        private int[] bookMoveTypes = null;
         private String eco = ""; // ECO classification
         private int distToEcoTree = 0; // Number of plies since game was in the "ECO tree".
 
@@ -742,6 +743,7 @@ public class DroidChessController {
             bookInfo = "";
             explorerInfo = "";
             bookMoves = null;
+            bookMoveTypes = null;
             eco = "";
             distToEcoTree = 0;
             lastUIUpdateTime = 0; // Force immediate UI update on clear
@@ -819,6 +821,7 @@ public class DroidChessController {
             ti.distToEcoTree = distToEcoTree;
             ti.pvMoves = pvMoves;
             ti.bookMoves = bookMoves;
+            ti.bookMoveTypes = bookMoveTypes;
             latestThinkingInfo = ti;
             long now = System.currentTimeMillis();
             if (now - lastUIUpdateTime >= UI_UPDATE_INTERVAL_MS) {
@@ -917,10 +920,12 @@ public class DroidChessController {
 
         @Override
         public void notifyBookInfo(int id, String bookInfo, ArrayList<Move> moveList,
+                                   int[] bookMoveTypes,
                                    String eco, int distToEcoTree, String explorerInfo) {
             this.bookInfo = bookInfo;
             this.explorerInfo = explorerInfo;
             bookMoves = moveList;
+            this.bookMoveTypes = bookMoveTypes;
             this.eco = eco;
             this.distToEcoTree = distToEcoTree;
             // Book/explorer updates often happen immediately after clearSearchInfo().
@@ -985,10 +990,11 @@ public class DroidChessController {
         if (game != null) {
             BookPosInput posInput = new BookPosInput(game);
             Pair<String, ArrayList<Move>> bi = computerPlayer.getBookHints(posInput, localPt());
+            int[] bookMoveTypes = DroidBook.getInstance().getLastBookMoveTypes();
             EcoDb.Result ecoData = EcoDb.getInstance().getEco(game.tree);
             String eco = ecoData.getName();
             String explorerHtml = DroidBook.getInstance().getExplorerInfo(game.currPos());
-            listener.notifyBookInfo(searchId, bi.first, bi.second, eco, ecoData.distToEcoTree, explorerHtml);
+            listener.notifyBookInfo(searchId, bi.first, bi.second, bookMoveTypes, eco, ecoData.distToEcoTree, explorerHtml);
         }
     }
 
@@ -1030,7 +1036,7 @@ public class DroidChessController {
                 listener.clearSearchInfo(searchId);
                 EcoDb.Result ecoData = EcoDb.getInstance().getEco(game.tree);
                 String eco = ecoData.getName();
-                listener.notifyBookInfo(searchId, "", null, eco, ecoData.distToEcoTree, "");
+                listener.notifyBookInfo(searchId, "", null, null, eco, ecoData.distToEcoTree, "");
                 final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
                 Position currPos = new Position(game.currPos());
                 long now = System.currentTimeMillis();

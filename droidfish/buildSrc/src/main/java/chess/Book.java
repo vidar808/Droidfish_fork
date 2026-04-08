@@ -30,6 +30,21 @@ import java.util.List;
 
 /** Implements an opening book. */
 public class Book {
+    /** Line type constants for gambit classification. */
+    public static final int LINE_NORMAL       = 0;
+    public static final int LINE_GAMBIT_WHITE  = 1;
+    public static final int LINE_GAMBIT_BLACK  = 2;
+    public static final int LINE_GAMBIT_MUTUAL = 3;
+
+    /** Quality constants for line classification. */
+    public static final int QUALITY_UNRATED  = 0;
+    public static final int QUALITY_MAINLINE = 1;
+    public static final int QUALITY_SIDELINE = 2;
+    public static final int QUALITY_DUBIOUS  = 3;
+
+    /** Magic bytes written at the start of the enhanced book format (v2). */
+    private static final byte[] MAGIC = { 'D', 'F', 'B', '2' };
+
     /** Creates the book.bin file. */
     public static void main(String[] args) throws IOException {
         String inFile = args[0];
@@ -49,20 +64,38 @@ public class Book {
 
     public static List<Byte> createBinBook(String inFileName) {
         List<Byte> binBook = new ArrayList<>(0);
+        // Write magic header for v2 format detection
+        for (byte b : MAGIC)
+            binBook.add(b);
         try (InputStream inStream = new FileInputStream(inFileName);
             InputStreamReader inFile = new InputStreamReader(inStream);
             BufferedReader inBuf = new BufferedReader(inFile);
             LineNumberReader lnr = new LineNumberReader(inBuf)) {
             String line;
+            int lineType = LINE_NORMAL;
+            int quality = QUALITY_SIDELINE;
             while ((line = lnr.readLine()) != null) {
-                if (line.startsWith("#") || (line.length() == 0)) {
+                if (line.length() == 0) {
                     continue;
                 }
-                if (!addBookLine(line, binBook)) {
+                if (line.startsWith("# META ")) {
+                    // Parse metadata line: "# META <lineType> <quality>"
+                    String[] parts = line.substring(7).trim().split("\\s+");
+                    lineType = parseLineType(parts.length > 0 ? parts[0] : "");
+                    quality = parseQuality(parts.length > 1 ? parts[1] : "");
+                    continue;
+                }
+                if (line.startsWith("#")) {
+                    continue;
+                }
+                int meta = (lineType & 0x3) | ((quality & 0x3) << 2);
+                if (!addBookLine(line, binBook, meta)) {
                     System.out.printf("Book parse error, line:%d\n", lnr.getLineNumber());
                     throw new RuntimeException();
                 }
-//              System.out.printf("no:%d line:%s%n", lnr.getLineNumber(), line);
+                // Reset metadata for next entry
+                lineType = LINE_NORMAL;
+                quality = QUALITY_SIDELINE;
             }
         } catch (ChessParseError ex) {
             throw new RuntimeException();
@@ -73,8 +106,27 @@ public class Book {
         return binBook;
     }
 
-    /** Add a sequence of moves, starting from the initial position, to the binary opening book. */
-    private static boolean addBookLine(String line, List<Byte> binBook) throws ChessParseError {
+    private static int parseLineType(String s) {
+        switch (s) {
+            case "gambit-white":  return LINE_GAMBIT_WHITE;
+            case "gambit-black":  return LINE_GAMBIT_BLACK;
+            case "gambit-mutual": return LINE_GAMBIT_MUTUAL;
+            default:              return LINE_NORMAL;
+        }
+    }
+
+    private static int parseQuality(String s) {
+        switch (s) {
+            case "mainline": return QUALITY_MAINLINE;
+            case "sideline": return QUALITY_SIDELINE;
+            case "dubious":  return QUALITY_DUBIOUS;
+            default:         return QUALITY_UNRATED;
+        }
+    }
+
+    /** Add a sequence of moves, starting from the initial position, to the binary opening book.
+     *  Each move is encoded as 4 bytes: 2-byte move + 2-byte metadata. */
+    private static boolean addBookLine(String line, List<Byte> binBook, int meta) throws ChessParseError {
         Position pos = TextIO.readFEN(TextIO.startPosFEN);
         UndoInfo ui = new UndoInfo();
         String[] strMoves = line.split(" ");
@@ -86,7 +138,6 @@ public class Book {
                     "0-1".equals(strMove) || "1/2-1/2".equals(strMove)) {
                 break;
             }
-//            System.out.printf("Adding move:%s\n", strMove);
             int bad = 0;
             if (strMove.endsWith("?")) {
                 strMove = strMove.substring(0, strMove.length() - 1);
@@ -98,10 +149,17 @@ public class Book {
             }
             int prom = pieceToProm(m.promoteTo);
             int val = m.from + (m.to << 6) + (prom << 12) + (bad << 15);
+            // Write 2-byte move
             binBook.add((byte)(val >> 8));
             binBook.add((byte)(val & 255));
+            // Write 2-byte metadata
+            binBook.add((byte)((meta >> 8) & 0xFF));
+            binBook.add((byte)(meta & 0xFF));
             pos.makeMove(m, ui);
         }
+        // 4-byte terminator (two zero words)
+        binBook.add((byte)0);
+        binBook.add((byte)0);
         binBook.add((byte)0);
         binBook.add((byte)0);
         return true;

@@ -58,6 +58,7 @@ public interface GUIInterface {
         public String explorerInfo;
         public ArrayList<ArrayList<Move>> pvMoves;
         public ArrayList<Move> bookMoves;
+        public int[] bookMoveTypes; // Parallel gambit line type array, or null
         public String eco;
         public int distToEcoTree;
     }

@@ -65,6 +65,12 @@
             android:summary="@string/prefs_bookHints_summary"
             android:defaultValue="true">
         </CheckBoxPreference>
+        <CheckBoxPreference
+            android:key="gambitArrows"
+            android:title="@string/prefs_gambitArrows_title"
+            android:summary="@string/prefs_gambitArrows_summary"
+            android:defaultValue="true">
+        </CheckBoxPreference>
         <ListPreference
             android:key="ecoHints"
             android:title="@string/prefs_ecoHints_title"
@@ -343,7 +349,7 @@
                     android:title="@string/prefs_button_action_1_title"
                     android:entryValues="@array/button_action_values"
                     android:entries="@array/button_action_texts"
-                    android:defaultValue="flipboard">
+                    android:defaultValue="showThinking">
                 </ListPreference>
                 <ListPreference
                     android:key="button_action_custom1_2"
@@ -436,28 +442,21 @@
             <PreferenceCategory
                 android:title="@string/prefs_custom_button_3">
                 <ListPreference
-                    android:key="button_action_custom3_0" 
-                    android:title="@string/prefs_button_action_0_title" 
-                    android:entryValues="@array/button_action_values" 
-                    android:entries="@array/button_action_texts" 
+                    android:key="button_action_custom3_0"
+                    android:title="@string/prefs_button_action_0_title"
+                    android:entryValues="@array/button_action_values"
+                    android:entries="@array/button_action_texts"
                     android:defaultValue="loadLastFile">
                 </ListPreference>
                 <ListPreference
-                    android:key="button_action_custom3_1" 
-                    android:title="@string/prefs_button_action_1_title" 
-                    android:entryValues="@array/button_action_values" 
-                    android:entries="@array/button_action_texts" 
+                    android:key="button_action_custom3_1"
+                    android:title="@string/prefs_button_action_1_title"
+                    android:entryValues="@array/button_action_values"
+                    android:entries="@array/button_action_texts"
                     android:defaultValue="loadGame">
                 </ListPreference>
                 <ListPreference
-                    android:key="button_action_custom3_2" 
-                    android:title="@string/prefs_button_action_2_title" 
-                    android:entryValues="@array/button_action_values" 
-                    android:entries="@array/button_action_texts" 
-                    android:defaultValue="">
-                </ListPreference>
-                <ListPreference
-                    android:key="button_action_custom3_3" 
+                    android:key="button_action_custom3_3"
                     android:title="@string/prefs_button_action_3_title" 
                     android:entryValues="@array/button_action_values" 
                     android:entries="@array/button_action_texts" 

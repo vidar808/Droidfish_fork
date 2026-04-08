@@ -63,6 +63,7 @@ public abstract class ChessBoard extends View {
     public boolean blindMode;                 // If true, no chess pieces and arrows are drawn
 
     private List<Move> moveHints;
+    private int[] moveHintTypes; // Parallel gambit type array, or null for default coloring
 
     /** Decoration for a square. Currently the only possible decoration is a tablebase probe result. */
     public final static class SquareDecoration implements Comparable<SquareDecoration> {
@@ -86,6 +87,9 @@ public abstract class ChessBoard extends View {
     private Paint labelPaint;
     private Paint decorationPaint;
     private ArrayList<Paint> moveMarkPaint;
+    private Paint gambitWhitePaint;
+    private Paint gambitBlackPaint;
+    private Paint gambitMutualPaint;
 
     public ChessBoard(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -122,6 +126,15 @@ public abstract class ChessBoard extends View {
             p.setAntiAlias(true);
             moveMarkPaint.add(p);
         }
+        gambitWhitePaint = new Paint();
+        gambitWhitePaint.setStyle(Paint.Style.FILL);
+        gambitWhitePaint.setAntiAlias(true);
+        gambitBlackPaint = new Paint();
+        gambitBlackPaint.setStyle(Paint.Style.FILL);
+        gambitBlackPaint.setAntiAlias(true);
+        gambitMutualPaint = new Paint();
+        gambitMutualPaint.setStyle(Paint.Style.FILL);
+        gambitMutualPaint.setAntiAlias(true);
 
         if (isInEditMode())
             return;
@@ -139,6 +152,9 @@ public abstract class ChessBoard extends View {
         decorationPaint.setColor(ct.getColor(ColorTheme.DECORATION));
         for (int i = 0; i < ColorTheme.MAX_ARROWS; i++)
             moveMarkPaint.get(i).setColor(ct.getColor(ColorTheme.ARROW_0 + i));
+        gambitWhitePaint.setColor(ct.getColor(ColorTheme.GAMBIT_WHITE));
+        gambitBlackPaint.setColor(ct.getColor(ColorTheme.GAMBIT_BLACK));
+        gambitMutualPaint.setColor(ct.getColor(ColorTheme.GAMBIT_MUTUAL));
 
         invalidate();
     }
@@ -554,7 +570,17 @@ public abstract class ChessBoard extends View {
             mtx.postRotate((float)(Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI));
             mtx.postTranslate(x0, y0);
             path.transform(mtx);
-            Paint p = moveMarkPaint.get(i);
+            Paint p;
+            if (moveHintTypes != null && i < moveHintTypes.length && moveHintTypes[i] != 0) {
+                switch (moveHintTypes[i]) {
+                    case 1:  p = gambitWhitePaint;  break;
+                    case 2:  p = gambitBlackPaint;  break;
+                    case 3:  p = gambitMutualPaint;  break;
+                    default: p = moveMarkPaint.get(i); break;
+                }
+            } else {
+                p = moveMarkPaint.get(i);
+            }
             canvas.drawPath(path, p);
         }
     }
@@ -660,6 +686,10 @@ public abstract class ChessBoard extends View {
     protected abstract int getSquare(int x, int y);
 
     public final void setMoveHints(List<Move> moveHints) {
+        setMoveHints(moveHints, null);
+    }
+
+    public final void setMoveHints(List<Move> moveHints, int[] hintTypes) {
         boolean equal;
         if ((this.moveHints == null) || (moveHints == null)) {
             equal = this.moveHints == moveHints;
@@ -668,6 +698,10 @@ public abstract class ChessBoard extends View {
         }
         if (!equal) {
             this.moveHints = moveHints;
+            this.moveHintTypes = hintTypes;
+            invalidate();
+        } else if (!java.util.Arrays.equals(this.moveHintTypes, hintTypes)) {
+            this.moveHintTypes = hintTypes;
             invalidate();
         }
     }

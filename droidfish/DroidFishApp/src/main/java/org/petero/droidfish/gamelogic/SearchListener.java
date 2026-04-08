@@ -72,8 +72,10 @@ public interface SearchListener {
     /** Report search statistics. */
     void notifyStats(int id, long nodes, int nps, long tbHits, int hash, int time, int seldepth);
 
-    /** Report opening book information. */
+    /** Report opening book information.
+     *  @param bookMoveTypes parallel array of gambit line types for moveList, or null */
     void notifyBookInfo(int id, String bookInfo, ArrayList<Move> moveList,
+                        int[] bookMoveTypes,
                         String eco, int distToEcoTree, String explorerInfo);
 
     /** Report move (or command, such as "resign") played by the engine. */

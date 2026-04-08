@@ -131,6 +131,7 @@ import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -173,6 +174,7 @@ public class DroidFish extends AppCompatActivity
     private int numPV;
     private boolean mWhiteBasedScores;
     private boolean mShowBookHints;
+    private boolean mGambitArrows;
     private int mEcoHints;
     private int maxNumArrows;
     GameMode gameMode;
@@ -193,7 +195,7 @@ public class DroidFish extends AppCompatActivity
     private TextView thinking;
     private View buttons;
     private ImageButton custom1Button, custom2Button, custom3Button;
-    private ImageButton modeButton, undoButton, redoButton;
+    private ImageButton flipButton, modeButton, undoButton, redoButton;
     private ButtonActions custom1ButtonActions, custom2ButtonActions, custom3ButtonActions;
     private TextView whiteTitleText, blackTitleText, engineTitleText;
     private View secondTitleLine;
@@ -1148,6 +1150,12 @@ public class DroidFish extends AppCompatActivity
         custom3Button = findViewById(R.id.custom3Button);
         custom3ButtonActions.setImageButton(custom3Button, this);
 
+        flipButton = findViewById(R.id.flipButton);
+        flipButton.setOnClickListener(v -> {
+            boardFlipped = !cb.flipped;
+            setBooleanPref("boardFlipped", boardFlipped);
+            cb.setFlipped(boardFlipped);
+        });
         modeButton = findViewById(R.id.modeButton);
         modeButton.setOnClickListener(v -> showDialog(GAME_MODE_DIALOG));
         modeButton.setOnLongClickListener(v -> {
@@ -1243,7 +1251,7 @@ public class DroidFish extends AppCompatActivity
     }
 
     private void readPrefs(boolean restartIfLangChange) {
-        int modeNr = getIntSetting("gameMode", 1);
+        int modeNr = getIntSetting("gameMode", GameMode.TWO_PLAYERS);
         gameMode = new GameMode(modeNr);
         String oldPlayerName = playerName;
         playerName = settings.getString("playerName", "Player");
@@ -1266,6 +1274,7 @@ public class DroidFish extends AppCompatActivity
         mWhiteBasedScores = settings.getBoolean("whiteBasedScores", false);
         maxNumArrows = getIntSetting("thinkingArrows", 4);
         mShowBookHints = settings.getBoolean("bookHints", true);
+        mGambitArrows = settings.getBoolean("gambitArrows", true);
         mEcoHints = getIntSetting("ecoHints", ECO_HINTS_AUTO);
 
         String engine = settings.getString("engine", "stockfish");
@@ -1452,6 +1461,7 @@ public class DroidFish extends AppCompatActivity
         setButtonData(custom1Button, bWidth, bHeight, custom1ButtonActions.getIcon(), svg);
         setButtonData(custom2Button, bWidth, bHeight, custom2ButtonActions.getIcon(), svg);
         setButtonData(custom3Button, bWidth, bHeight, custom3ButtonActions.getIcon(), svg);
+        setButtonData(flipButton, bWidth, bHeight, R.raw.flip, svg);
         setButtonData(modeButton, bWidth, bHeight, R.raw.mode, svg);
         setButtonData(undoButton, bWidth, bHeight, R.raw.left, svg);
         setButtonData(redoButton, bWidth, bHeight, R.raw.right, svg);
@@ -2134,6 +2144,7 @@ public class DroidFish extends AppCompatActivity
     private String variantStr = "";
     private ArrayList<ArrayList<Move>> pvMoves = new ArrayList<>();
     private ArrayList<Move> bookMoves = null;
+    private int[] bookMoveTypes = null;
     private ArrayList<Move> variantMoves = null;
 
     @Override
@@ -2146,6 +2157,7 @@ public class DroidFish extends AppCompatActivity
         distToEcoTree = ti.distToEcoTree;
         pvMoves = ti.pvMoves;
         bookMoves = ti.bookMoves;
+        bookMoveTypes = ti.bookMoveTypes;
         updateThinkingInfo();
 
         if (ctrl.computerBusy()) {
@@ -2167,31 +2179,66 @@ public class DroidFish extends AppCompatActivity
         return line.substring(0, maxLen);
     }
 
-    /** Build styled text from a string that may contain simple HTML tags (&lt;b&gt;, &lt;br&gt;).
+    /** Build styled text from a string that may contain simple HTML tags.
+     *  Supports: &lt;b&gt; (bold), &lt;br&gt; (newline), &lt;gw&gt; (gambit-white color),
+     *  &lt;gb&gt; (gambit-black color), &lt;gm&gt; (gambit-mutual color).
      *  Much faster than Html.fromHtml() since it avoids the full HTML parser. */
     private static CharSequence styledText(String s) {
         // Strip <br> → newline
         s = s.replace("<br>", "\n").replace("<br/>", "\n");
-        // Handle <b>...</b> → bold spans
         SpannableStringBuilder ssb = new SpannableStringBuilder();
         int idx = 0;
         while (idx < s.length()) {
-            int bStart = s.indexOf("<b>", idx);
-            if (bStart < 0) {
+            int tagStart = s.indexOf('<', idx);
+            if (tagStart < 0) {
                 ssb.append(s, idx, s.length());
                 break;
             }
-            ssb.append(s, idx, bStart);
-            int bEnd = s.indexOf("</b>", bStart + 3);
-            if (bEnd < 0) {
-                ssb.append(s, bStart + 3, s.length());
-                break;
+            ssb.append(s, idx, tagStart);
+
+            if (s.startsWith("<b>", tagStart)) {
+                int bEnd = s.indexOf("</b>", tagStart + 3);
+                if (bEnd < 0) {
+                    ssb.append(s, tagStart + 3, s.length());
+                    break;
+                }
+                int spanStart = ssb.length();
+                ssb.append(styledText(s.substring(tagStart + 3, bEnd)));
+                ssb.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),
+                            spanStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                idx = bEnd + 4;
+            } else if (s.startsWith("<gw>", tagStart)) {
+                int end = s.indexOf("</gw>", tagStart + 4);
+                if (end < 0) { ssb.append(s, tagStart + 4, s.length()); break; }
+                int spanStart = ssb.length();
+                ssb.append(styledText(s.substring(tagStart + 4, end)));
+                ssb.setSpan(new ForegroundColorSpan(
+                            ColorTheme.instance().getColor(ColorTheme.GAMBIT_WHITE)),
+                            spanStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                idx = end + 5;
+            } else if (s.startsWith("<gb>", tagStart)) {
+                int end = s.indexOf("</gb>", tagStart + 4);
+                if (end < 0) { ssb.append(s, tagStart + 4, s.length()); break; }
+                int spanStart = ssb.length();
+                ssb.append(styledText(s.substring(tagStart + 4, end)));
+                ssb.setSpan(new ForegroundColorSpan(
+                            ColorTheme.instance().getColor(ColorTheme.GAMBIT_BLACK)),
+                            spanStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                idx = end + 5;
+            } else if (s.startsWith("<gm>", tagStart)) {
+                int end = s.indexOf("</gm>", tagStart + 4);
+                if (end < 0) { ssb.append(s, tagStart + 4, s.length()); break; }
+                int spanStart = ssb.length();
+                ssb.append(styledText(s.substring(tagStart + 4, end)));
+                ssb.setSpan(new ForegroundColorSpan(
+                            ColorTheme.instance().getColor(ColorTheme.GAMBIT_MUTUAL)),
+                            spanStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                idx = end + 5;
+            } else {
+                // Unknown tag — output the '<' literally and continue
+                ssb.append('<');
+                idx = tagStart + 1;
             }
-            int spanStart = ssb.length();
-            ssb.append(s, bStart + 3, bEnd);
-            ssb.setSpan(new StyleSpan(android.graphics.Typeface.BOLD),
-                        spanStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            idx = bEnd + 4;
         }
         return ssb;
     }
@@ -2268,16 +2315,25 @@ public class DroidFish extends AppCompatActivity
                         hints.add(pv.get(0));
             }
         }
-        if ((hints == null) && mShowBookHints)
+        int[] hintTypes = null;
+        if ((hints == null) && mShowBookHints) {
             hints = bookMoves;
+            hintTypes = mGambitArrows ? bookMoveTypes : null;
+        }
         if (((hints == null) || hints.isEmpty()) &&
             (variantMoves != null) && variantMoves.size() > 1) {
             hints = variantMoves;
+            hintTypes = null;
         }
         if ((hints != null) && (hints.size() > maxNumArrows)) {
             hints = hints.subList(0, maxNumArrows);
+            if (hintTypes != null && hintTypes.length > maxNumArrows) {
+                int[] trimmed = new int[maxNumArrows];
+                System.arraycopy(hintTypes, 0, trimmed, 0, maxNumArrows);
+                hintTypes = trimmed;
+            }
         }
-        cb.setMoveHints(hints);
+        cb.setMoveHints(hints, hintTypes);
     }
 
     static private final int PROMOTE_DIALOG = 0;

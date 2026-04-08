@@ -65,6 +65,8 @@ final class InternalBook implements IOpeningBook {
         for (BookEntry be : ents) {
             BookEntry be2 = new BookEntry(be.move);
             be2.weight = (float)(Math.sqrt(be.weight) * 100 + 1);
+            be2.lineType = be.lineType;
+            be2.quality = be.quality;
             ret.add(be2);
         }
         return ret;
@@ -75,11 +77,14 @@ final class InternalBook implements IOpeningBook {
         enabled = options.filename.equals("internal:");
     }
 
+    /** Magic bytes identifying the enhanced v2 book format. */
+    private static final byte[] MAGIC_V2 = { 'D', 'F', 'B', '2' };
+
     private synchronized void initInternalBook() {
         if (numBookMoves >= 0)
             return;
-//        long t0 = System.currentTimeMillis();
         bookMap = new HashMap<>();
+        gambitVotes = new HashMap<>();
         numBookMoves = 0;
         try {
             InputStream inStream = DroidFishApp.getContext().getAssets().open("book.bin");
@@ -92,14 +97,30 @@ final class InternalBook implements IOpeningBook {
                     buf.add(tmpBuf[i]);
             }
             inStream.close();
+
+            // Detect format: v2 starts with magic "DFB2"
+            boolean v2 = buf.size() >= 4 &&
+                         buf.get(0) == MAGIC_V2[0] && buf.get(1) == MAGIC_V2[1] &&
+                         buf.get(2) == MAGIC_V2[2] && buf.get(3) == MAGIC_V2[3];
+            int offset = v2 ? 4 : 0;
+            int step = v2 ? 4 : 2;
+
             Position startPos = TextIO.readFEN(TextIO.startPosFEN);
             Position pos = new Position(startPos);
             UndoInfo ui = new UndoInfo();
             int len = buf.size();
-            for (int i = 0; i < len; i += 2) {
-                int b0 = buf.get(i); if (b0 < 0) b0 += 256;
-                int b1 = buf.get(i+1); if (b1 < 0) b1 += 256;
+            for (int i = offset; i + step - 1 < len; i += step) {
+                int b0 = buf.get(i) & 0xFF;
+                int b1 = buf.get(i + 1) & 0xFF;
                 int move = (b0 << 8) + b1;
+
+                int meta = 0;
+                if (v2) {
+                    int m0 = buf.get(i + 2) & 0xFF;
+                    int m1 = buf.get(i + 3) & 0xFF;
+                    meta = (m0 << 8) + m1;
+                }
+
                 if (move == 0) {
                     pos = new Position(startPos);
                 } else {
@@ -107,42 +128,88 @@ final class InternalBook implements IOpeningBook {
                     int prom = (move >> 12) & 7;
                     Move m = new Move(move & 63, (move >> 6) & 63,
                                       promToPiece(prom, pos.whiteMove));
-                    if (!bad)
-                        addToBook(pos, m);
+                    if (!bad) {
+                        int lineType = meta & 0x3;
+                        int quality = (meta >> 2) & 0x3;
+                        addToBook(pos, m, lineType, quality);
+                    }
                     pos.makeMove(m, ui);
                 }
             }
+            applyGambitVotes();
         } catch (ChessParseError ex) {
             Log.w(TAG, "Failed to parse internal opening book");
         } catch (IOException ex) {
             Log.w(TAG, "Internal opening book not found (book.bin missing). " +
                        "Using engine's own opening play instead.");
         }
-/*        {
-            long t1 = System.currentTimeMillis();
-            System.out.printf("Book moves:%d (parse time:%.3f)%n", numBookMoves,
-                    (t1 - t0) / 1000.0);
-        } */
     }
 
 
+    /** Per-entry gambit vote counters, used during loading then discarded. */
+    private static HashMap<Long, HashMap<Integer, int[]>> gambitVotes;
+    // Outer key = position zobrist, inner key = move compact (from*64+to),
+    // value = [normalCount, gambitCount, lastGambitType]
+
     /** Add a move to a position in the opening book. */
-    private void addToBook(Position pos, Move moveToAdd) {
-        ArrayList<BookEntry> ent = bookMap.get(pos.zobristHash());
+    private void addToBook(Position pos, Move moveToAdd, int lineType, int quality) {
+        long posHash = pos.zobristHash();
+        ArrayList<BookEntry> ent = bookMap.get(posHash);
         if (ent == null) {
             ent = new ArrayList<>();
-            bookMap.put(pos.zobristHash(), ent);
+            bookMap.put(posHash, ent);
         }
+
+        // Track gambit votes per move per position
+        int moveKey = moveToAdd.from * 64 + moveToAdd.to;
+        HashMap<Integer, int[]> posVotes = gambitVotes.get(posHash);
+        if (posVotes == null) {
+            posVotes = new HashMap<>();
+            gambitVotes.put(posHash, posVotes);
+        }
+        int[] votes = posVotes.get(moveKey);
+        if (votes == null) {
+            votes = new int[3];
+            posVotes.put(moveKey, votes);
+        }
+        if (lineType == DroidBook.LINE_NORMAL)
+            votes[0]++;
+        else {
+            votes[1]++;
+            votes[2] = lineType;
+        }
+
         for (int i = 0; i < ent.size(); i++) {
             BookEntry be = ent.get(i);
             if (be.move.equals(moveToAdd)) {
                 be.weight++;
+                if (quality > be.quality)
+                    be.quality = quality;
                 return;
             }
         }
         BookEntry be = new BookEntry(moveToAdd);
+        be.quality = quality;
         ent.add(be);
         numBookMoves++;
+    }
+
+    /** Apply gambit tags using majority voting — only tag a move as gambit
+     *  if more than half its occurrences come from gambit lines. */
+    private static void applyGambitVotes() {
+        for (HashMap.Entry<Long, ArrayList<BookEntry>> mapEntry : bookMap.entrySet()) {
+            long posHash = mapEntry.getKey();
+            HashMap<Integer, int[]> posVotes = gambitVotes.get(posHash);
+            if (posVotes == null) continue;
+            for (BookEntry be : mapEntry.getValue()) {
+                int moveKey = be.move.from * 64 + be.move.to;
+                int[] votes = posVotes.get(moveKey);
+                if (votes != null && votes[1] > votes[0]) {
+                    be.lineType = votes[2];
+                }
+            }
+        }
+        gambitVotes = null; // Free memory
     }
 
     private static int promToPiece(int prom, boolean whiteMove) {
